@@ -37,34 +37,33 @@
   
   /* ── Layout ── */
   .app { display: flex; flex-direction: column; height: 100%; max-width: 480px; margin: 0 auto; position: relative; }
+
+  /* Sidebar: hidden on mobile by default */
+  .sidebar { display: none; }
+
   @media(min-width:860px) {
     body { display: flex; background: #08080d; }
-    .app { max-width: 100%; flex-direction: row; background: var(--bg); }
-    .sidebar { width: 220px; min-width:220px; background: var(--surface); border-right: 1px solid var(--border); display:flex; flex-direction:column; padding: 32px 0 24px; gap:4px; }
+    .app { max-width: 100%; width: 100%; flex-direction: row; background: var(--bg); }
+    .sidebar {
+      display: flex; flex-direction: column;
+      width: 220px; min-width: 220px;
+      background: var(--surface); border-right: 1px solid var(--border);
+      padding: 32px 0 24px; gap: 4px;
+    }
     .sidebar-logo { padding: 0 24px 28px; }
     .sidebar-logo h1 { font-family: 'DM Serif Display'; font-size: 1.6rem; color: var(--text); }
     .sidebar-logo span { color: var(--accent); }
-    .sidebar-nav-item { display:flex; align-items:center; gap:12px; padding:12px 24px; cursor:pointer; border-radius:0; transition: all 0.15s; color: var(--text2); font-size:.9rem; font-weight:500; border-left: 3px solid transparent; }
-    .sidebar-nav-item:hover { background: var(--surface2); color:var(--text); }
+    .sidebar-nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 24px; cursor: pointer; transition: all 0.15s; color: var(--text2); font-size: .9rem; font-weight: 500; border-left: 3px solid transparent; }
+    .sidebar-nav-item:hover { background: var(--surface2); color: var(--text); }
     .sidebar-nav-item.active { background: var(--surface2); color: var(--accent2); border-left-color: var(--accent); }
-    .sidebar-nav-item svg { width:18px; height:18px; flex-shrink:0; }
+    .sidebar-nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
     .bottom-nav { display: none; }
-    .main { flex: 1; overflow: hidden; }
+    .main { flex: 1; min-width: 0; height: 100%; overflow-y: auto; overflow-x: hidden; padding-bottom: 0; }
     .page { max-width: 860px; margin: 0 auto; }
     .top-bar { padding: 32px 32px 0; }
   }
   
   .main { flex: 1; overflow-y: auto; overflow-x: hidden; padding-bottom: calc(var(--bottom-h) + 16px); }
-  @media(min-width:860px) { .main { padding-bottom: 0; overflow-y: auto; } }
-
-  /* ── Tablet (560–859px): single-column, larger cards ── */
-  @media(min-width:560px) and (max-width:859px) {
-    .app { max-width: 600px; margin: 0 auto; }
-    .summary-row { gap: 14px; }
-    .sum-card { padding: 18px 16px; }
-    .sum-card .amount { font-size: 1.2rem; }
-    .page { padding: 24px; }
-  }
   
   /* ── Top bar ── */
   .top-bar { padding: 20px 20px 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
