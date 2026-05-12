@@ -363,6 +363,9 @@
     <!-- ACCOUNTS -->
     <div class="page" id="page-accounts">
       <div class="top-bar" style="padding-bottom:16px">
+        <div class="hamburger" onclick="openDrawer()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </div>
         <h2>帳戶</h2>
         <button class="btn-secondary" onclick="openAccModal()">+ 新增帳戶</button>
       </div>
@@ -378,6 +381,9 @@
     <!-- BUDGET -->
     <div class="page" id="page-budget">
       <div class="top-bar" style="padding-bottom:16px">
+        <div class="hamburger" onclick="openDrawer()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </div>
         <h2>預算</h2>
         <button class="btn-secondary" onclick="openBudgetModal()">+ 設定預算</button>
       </div>
@@ -391,6 +397,9 @@
     <!-- CHARTS -->
     <div class="page" id="page-charts">
       <div class="top-bar">
+        <div class="hamburger" onclick="openDrawer()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </div>
         <h2>報表分析</h2>
         <div class="month-nav">
           <button onclick="changeMonth(-1)">&#8249;</button>
@@ -423,6 +432,9 @@
     <!-- RECURRING -->
     <div class="page" id="page-recurring">
       <div class="top-bar" style="padding-bottom:16px">
+        <div class="hamburger" onclick="openDrawer()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </div>
         <h2>週期帳</h2>
         <button class="btn-secondary" onclick="openRecurringModal()">+ 新增</button>
       </div>
@@ -435,7 +447,12 @@
 
     <!-- SETTINGS -->
     <div class="page" id="page-settings">
-      <div class="top-bar" style="padding-bottom:16px"><h2>設定</h2></div>
+      <div class="top-bar" style="padding-bottom:16px">
+        <div class="hamburger" onclick="openDrawer()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </div>
+        <h2>設定</h2>
+      </div>
       <div class="inner-content">
         <div class="settings-section">
           <h3>顯示</h3>
@@ -495,9 +512,9 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
       預算
     </div>
-    <div class="nav-item" id="nav-more" onclick="openDrawer()" style="cursor:pointer">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-      選單
+    <div class="nav-item" id="nav-charts" onclick="showPage('charts',this,true)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      報表
     </div>
   </nav>
 
