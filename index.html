@@ -593,6 +593,12 @@
         </select>
       </div>
     </div>
+    <div class="form-group" id="account-field">
+      <label class="form-label">帳戶</label>
+      <select class="form-input form-select" id="tx-account">
+        <option value="">── 不指定帳戶 ──</option>
+      </select>
+    </div>
     <div class="form-group">
       <label class="form-label">備註（選填）</label>
       <input class="form-input" type="text" id="tx-note" placeholder="備註說明...">
@@ -710,6 +716,12 @@
     <div class="form-group">
       <label class="form-label">分類</label>
       <div class="cat-grid" id="rec-cat-grid"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">帳戶</label>
+      <select class="form-input form-select" id="rec-account">
+        <option value="">── 不指定帳戶 ──</option>
+      </select>
     </div>
     <button class="btn-primary" onclick="saveRecurring()">新增週期帳</button>
   </div>
@@ -923,6 +935,7 @@ let editingTxId = null;
 
 function openTxModal(id) {
   editingTxId = id || null;
+  populateAccountSelect('tx-account');
   if (id) {
     const tx = transactions.find(t=>t.id===id);
     if (tx) {
@@ -932,6 +945,7 @@ function openTxModal(id) {
       document.getElementById('tx-date').value = tx.date;
       document.getElementById('tx-payment').value = tx.payment || '現金';
       document.getElementById('tx-note').value = tx.note || '';
+      document.getElementById('tx-account').value = tx.accountId || '';
     }
   } else {
     currentTxType = 'expense';
@@ -939,7 +953,13 @@ function openTxModal(id) {
     document.getElementById('tx-amount').value = '';
     document.getElementById('tx-date').value = new Date().toISOString().split('T')[0];
     document.getElementById('tx-note').value = '';
+    document.getElementById('tx-account').value = '';
   }
+  // show/hide account field based on type
+  const isTransfer = currentTxType === 'transfer';
+  document.getElementById('account-field').style.display = isTransfer ? 'none' : 'block';
+  document.getElementById('transfer-fields').style.display = isTransfer ? 'block' : 'none';
+  if (isTransfer) populateTransferAccounts();
   buildCatGrid();
   updateTypeButtons();
   document.getElementById('txModal').classList.add('open');
@@ -961,8 +981,10 @@ function setType(type, btn, ctx) {
     selectedCat = '';
     updateTypeButtons();
     buildCatGrid();
-    document.getElementById('transfer-fields').style.display = type === 'transfer' ? 'block' : 'none';
-    if (type === 'transfer') populateTransferAccounts();
+    const isTransfer = type === 'transfer';
+    document.getElementById('transfer-fields').style.display = isTransfer ? 'block' : 'none';
+    document.getElementById('account-field').style.display = isTransfer ? 'none' : 'block';
+    if (isTransfer) populateTransferAccounts();
   }
 }
 
@@ -992,6 +1014,15 @@ function selectRecCat(name, el) {
   selectedRecCat = name;
   document.querySelectorAll('#rec-cat-grid .cat-chip').forEach(c=>c.classList.remove('selected'));
   el.classList.add('selected');
+}
+
+function populateAccountSelect(selectId, includeEmpty = true) {
+  const sel = document.getElementById(selectId);
+  if (!sel) return;
+  const emptyOpt = includeEmpty ? '<option value="">── 不指定帳戶 ──</option>' : '';
+  sel.innerHTML = emptyOpt + accounts.map(a =>
+    `<option value="${a.id}">${ACC_ICONS[a.type]||'💳'} ${a.name} (${fmt(a.balance)})</option>`
+  ).join('');
 }
 
 function populateTransferAccounts() {
