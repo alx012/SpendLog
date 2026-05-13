@@ -79,7 +79,7 @@
     .sidebar-group.open .sidebar-group-items { max-height: 400px; }
     .sidebar-group .sidebar-nav-item { padding-left: 32px; font-size: .85rem; }
 
-    .bottom-nav { display: flex; left: 220px; width: auto; }
+    .bottom-nav { display: flex; left: 220px !important; width: auto !important; }
     .main { flex: 1; min-width: 0; height: 100%; overflow-y: auto; overflow-x: hidden; padding-bottom: 0; }
     .page { max-width: 860px; margin: 0 auto; }
     .top-bar { padding: 32px 32px 12px; position: static; background: transparent; }
@@ -128,7 +128,6 @@
   
   .bottom-nav {
     position: fixed; bottom: 0; left: 0; right: 0;
-    width: 100%;
     background: var(--surface); border-top: 1px solid var(--border);
     display: flex; align-items: center;
     height: var(--bottom-h); z-index: 100; padding: 0 4px 20px;
