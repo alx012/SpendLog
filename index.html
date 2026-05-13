@@ -617,6 +617,61 @@
     box-shadow: 0 8px 32px rgba(124,106,255,.5);
   }
   .lvlup-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ── Achievement Popup Notification ── */
+  .ach-popup-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.6); backdrop-filter: blur(6px);
+    z-index: 500; display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity .35s;
+  }
+  .ach-popup-overlay.show { opacity: 1; pointer-events: all; }
+  .ach-popup {
+    background: var(--surface); border-radius: 24px; padding: 32px 28px 28px;
+    max-width: 340px; width: calc(100% - 40px); text-align: center;
+    border: 1px solid var(--border2); box-shadow: 0 20px 60px rgba(0,0,0,.5);
+    transform: scale(.85) translateY(20px); transition: transform .35s cubic-bezier(.34,1.56,.64,1);
+    position: relative; overflow: hidden;
+  }
+  .ach-popup-overlay.show .ach-popup { transform: scale(1) translateY(0); }
+  .ach-popup::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--teal), var(--accent));
+    background-size: 200% 100%; animation: shimmer 2s linear infinite;
+  }
+  @keyframes shimmer { 0% { background-position: 0% 0; } 100% { background-position: 200% 0; } }
+  @keyframes popBounce { 0% { transform: scale(0); } 60% { transform: scale(1.15); } 80% { transform: scale(0.92); } 100% { transform: scale(1); } }
+  .ach-popup-sparkle { font-size: 2rem; margin-bottom: 4px; }
+  .ach-popup-icon {
+    width: 72px; height: 72px; border-radius: 20px; background: var(--surface2);
+    border: 2px solid rgba(124,106,255,.3); display: flex; align-items: center; justify-content: center;
+    font-size: 2.2rem; margin: 0 auto 16px; animation: popBounce .5s .1s both;
+    box-shadow: 0 0 0 8px rgba(124,106,255,.1);
+  }
+  .ach-popup-label { font-size: .72rem; color: var(--accent2); font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 6px; }
+  .ach-popup-name { font-family: 'DM Serif Display'; font-size: 1.5rem; color: var(--text); margin-bottom: 6px; }
+  .ach-popup-desc { font-size: .85rem; color: var(--text2); margin-bottom: 18px; line-height: 1.5; }
+  .ach-popup-xp {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(251,191,36,.12); border: 1px solid rgba(251,191,36,.25);
+    border-radius: 12px; padding: 8px 18px; font-size: 1rem; font-weight: 700; color: var(--yellow);
+    margin-bottom: 20px;
+  }
+  .ach-popup-user { display: flex; align-items: center; gap: 10px; background: var(--surface2); border-radius: 12px; padding: 10px 14px; margin-bottom: 20px; }
+  .ach-popup-user-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--teal)); display: flex; align-items: center; justify-content: center; font-size: .85rem; font-weight: 700; color: #fff; flex-shrink: 0; }
+  .ach-popup-user-info { text-align: left; flex: 1; }
+  .ach-popup-user-name { font-size: .85rem; font-weight: 600; color: var(--text); }
+  .ach-popup-user-lv { font-size: .72rem; color: var(--text3); }
+  .ach-popup-close {
+    width: 100%; padding: 12px; background: var(--accent); color: #fff; border: none;
+    border-radius: var(--radius-sm); font-size: .95rem; font-weight: 700; font-family: 'DM Sans';
+    cursor: pointer; transition: .15s;
+  }
+  .ach-popup-close:hover { background: var(--accent2); }
+
+  /* Profile in achievements hero */
+  .xp-hero-user { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+  .xp-hero-user-avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--teal)); display: flex; align-items: center; justify-content: center; font-size: .8rem; font-weight: 700; color: #fff; flex-shrink: 0; }
+  .xp-hero-user-name { font-size: .85rem; font-weight: 600; color: var(--text2); }
 </style>
 </head>
 <body>
@@ -973,6 +1028,10 @@
       <div class="inner-content">
         <!-- XP Hero Card -->
         <div class="xp-hero">
+          <div class="xp-hero-user" id="ach-hero-user" style="display:none">
+            <div class="xp-hero-user-avatar" id="ach-hero-user-avatar">👤</div>
+            <div class="xp-hero-user-name" id="ach-hero-user-name"></div>
+          </div>
           <div class="xp-hero-top">
             <div class="xp-avatar" id="ach-avatar">
               <span id="ach-avatar-emoji">🌱</span>
@@ -1113,6 +1172,28 @@
 
   <div id="lvlup-toast" class="lvlup-toast"></div>
 </div><!-- /app -->
+
+<!-- Achievement Popup Notification -->
+<div class="ach-popup-overlay" id="achPopupOverlay" onclick="closeAchPopup()">
+  <div class="ach-popup" onclick="event.stopPropagation()">
+    <div class="ach-popup-sparkle">🎉</div>
+    <div class="ach-popup-icon" id="achPopupIcon">🏆</div>
+    <div class="ach-popup-label">成就達成！</div>
+    <div class="ach-popup-name" id="achPopupName">-</div>
+    <div class="ach-popup-desc" id="achPopupDesc">-</div>
+    <div class="ach-popup-xp">
+      ⚡ <span id="achPopupXp">+0</span> XP 獲得！
+    </div>
+    <div class="ach-popup-user" id="achPopupUser" style="display:none">
+      <div class="ach-popup-user-avatar" id="achPopupUserAvatar">👤</div>
+      <div class="ach-popup-user-info">
+        <div class="ach-popup-user-name" id="achPopupUserName">-</div>
+        <div class="ach-popup-user-lv" id="achPopupUserLv">-</div>
+      </div>
+    </div>
+    <button class="ach-popup-close" onclick="closeAchPopup()">太棒了！繼續加油 💪</button>
+  </div>
+</div>
 
 <!-- ── Mobile Drawer ── -->
 <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
@@ -3280,6 +3361,7 @@ function saveProfile() {
   closeModal('profileModal');
   renderProfileCard();
   updateDashboardGreeting();
+  renderAchievements();
   showToast('✅ 個人資料已儲存');
 }
 
@@ -3343,40 +3425,56 @@ const LEVEL_AVATARS = ['🌱','💰','📊','🎯','💎','🏆','🌟','👑','
 // Achievement definitions  
 const ACH_DEFS = [
   // 記帳入門
-  { id:'tx_first',    cat:'記帳入門', icon:'✏️',  name:'第一筆記錄',   desc:'新增你的第一筆交易',         xp:30,  check: s => s.txCount >= 1 },
-  { id:'tx_10',       cat:'記帳入門', icon:'📝',  name:'記帳新兵',     desc:'累計記錄 10 筆交易',          xp:50,  check: s => s.txCount >= 10 },
-  { id:'tx_50',       cat:'記帳入門', icon:'📒',  name:'記帳老手',     desc:'累計記錄 50 筆交易',          xp:100, check: s => s.txCount >= 50 },
-  { id:'tx_100',      cat:'記帳入門', icon:'📚',  name:'百筆達人',     desc:'累計記錄 100 筆交易',         xp:200, check: s => s.txCount >= 100 },
-  { id:'note_first',  cat:'記帳入門', icon:'💬',  name:'備注控',       desc:'替一筆交易加上備注',          xp:20,  check: s => s.hasNote },
-  { id:'multi_cat',   cat:'記帳入門', icon:'🗂️', name:'分類大師',     desc:'使用超過 5 種不同支出分類',   xp:60,  check: s => s.catCount >= 5 },
+  { id:'tx_first',     cat:'記帳入門', icon:'✏️',  name:'第一筆記錄',     desc:'新增你的第一筆交易',                    xp:30,  check: s => s.txCount >= 1 },
+  { id:'tx_10',        cat:'記帳入門', icon:'📝',  name:'記帳新兵',       desc:'累計記錄 10 筆交易',                    xp:50,  check: s => s.txCount >= 10 },
+  { id:'tx_50',        cat:'記帳入門', icon:'📒',  name:'記帳老手',       desc:'累計記錄 50 筆交易',                    xp:100, check: s => s.txCount >= 50 },
+  { id:'tx_100',       cat:'記帳入門', icon:'📚',  name:'百筆達人',       desc:'累計記錄 100 筆交易',                   xp:200, check: s => s.txCount >= 100 },
+  { id:'tx_300',       cat:'記帳入門', icon:'🗃️', name:'鐵桿記帳師',     desc:'累計記錄 300 筆交易',                   xp:350, check: s => s.txCount >= 300 },
+  { id:'note_first',   cat:'記帳入門', icon:'💬',  name:'備注控',         desc:'替一筆交易加上備注說明',                xp:20,  check: s => s.hasNote },
+  { id:'note_20',      cat:'記帳入門', icon:'📋',  name:'細節狂魔',       desc:'累計為 20 筆交易加上備注',              xp:80,  check: s => s.noteCount >= 20 },
+  { id:'multi_cat',    cat:'記帳入門', icon:'🗂️', name:'分類大師',       desc:'使用超過 5 種不同支出分類',             xp:60,  check: s => s.catCount >= 5 },
+  { id:'multi_cat_10', cat:'記帳入門', icon:'🎨',  name:'全科記帳',       desc:'使用超過 10 種不同支出分類',            xp:120, check: s => s.catCount >= 10 },
+  { id:'week_streak',  cat:'記帳入門', icon:'🔥',  name:'一週不斷簽',     desc:'連續 7 天都有記帳紀錄',                 xp:150, check: s => s.dayStreak >= 7 },
+  { id:'month_streak', cat:'記帳入門', icon:'🌙',  name:'月度習慣養成',   desc:'連續 30 天都有記帳紀錄',                xp:400, check: s => s.dayStreak >= 30 },
 
   // 收支管理
-  { id:'income_first',  cat:'收支管理', icon:'💵', name:'第一筆收入',   desc:'記錄第一筆收入',             xp:30,  check: s => s.incomeCount >= 1 },
-  { id:'save_month',    cat:'收支管理', icon:'🟢', name:'月度盈餘',     desc:'當月收入大於支出',           xp:80,  check: s => s.monthBalance > 0 },
-  { id:'save_3month',   cat:'收支管理', icon:'📈', name:'連續盈餘',     desc:'連續 3 個月收入大於支出',    xp:150, check: s => s.posMonths >= 3 },
-  { id:'zero_expense',  cat:'收支管理', icon:'🧊', name:'零支出日',     desc:'某天完全沒有支出',           xp:40,  check: s => s.hasZeroExpDay },
-  { id:'big_income',    cat:'收支管理', icon:'💸', name:'大額收入',     desc:'單筆收入超過 10,000',        xp:60,  check: s => s.maxIncome >= 10000 },
+  { id:'income_first',  cat:'收支管理', icon:'💵', name:'第一筆收入',     desc:'記錄第一筆收入',                        xp:30,  check: s => s.incomeCount >= 1 },
+  { id:'income_5',      cat:'收支管理', icon:'💰', name:'收入來源多元',   desc:'記錄 5 筆以上的收入',                   xp:70,  check: s => s.incomeCount >= 5 },
+  { id:'save_month',    cat:'收支管理', icon:'🟢', name:'月度盈餘',       desc:'當月收入大於支出',                      xp:80,  check: s => s.monthBalance > 0 },
+  { id:'save_3month',   cat:'收支管理', icon:'📈', name:'連續盈餘 3 月',  desc:'連續 3 個月收入大於支出',               xp:200, check: s => s.posMonths >= 3 },
+  { id:'save_6month',   cat:'收支管理', icon:'🚀', name:'半年財務正軌',   desc:'連續 6 個月收入大於支出',               xp:500, check: s => s.posMonths >= 6 },
+  { id:'big_income',    cat:'收支管理', icon:'💸', name:'大額收入',       desc:'單筆收入超過 10,000',                   xp:80,  check: s => s.maxIncome >= 10000 },
+  { id:'huge_income',   cat:'收支管理', icon:'🤑', name:'六位數入帳',     desc:'單筆收入超過 100,000',                  xp:200, check: s => s.maxIncome >= 100000 },
+  { id:'low_month_exp', cat:'收支管理', icon:'🧊', name:'節制消費月',     desc:'當月支出低於上月的 70%（且上月有支出）', xp:120, check: s => s.expDropMonth },
+  { id:'no_impulse',    cat:'收支管理', icon:'🧘', name:'不衝動購物',     desc:'單月娛樂+購物類支出佔總支出低於 20%',   xp:100, check: s => s.lowImpulseMonth },
 
   // 帳戶管理
-  { id:'acc_first',   cat:'帳戶管理', icon:'🏦', name:'開戶啟程',     desc:'新增第一個帳戶',              xp:40,  check: s => s.accCount >= 1 },
-  { id:'acc_3',       cat:'帳戶管理', icon:'💳', name:'多帳戶玩家',   desc:'同時擁有 3 個以上帳戶',       xp:80,  check: s => s.accCount >= 3 },
-  { id:'transfer',    cat:'帳戶管理', icon:'🔄', name:'帳戶轉帳',     desc:'完成第一次帳戶轉帳',          xp:50,  check: s => s.transferCount >= 1 },
-  { id:'acc_positive',cat:'帳戶管理', icon:'✅', name:'帳戶正餘額',   desc:'所有帳戶都保持正餘額',        xp:100, check: s => s.allAccPositive },
+  { id:'acc_first',    cat:'帳戶管理', icon:'🏦', name:'開戶啟程',       desc:'新增第一個帳戶',                        xp:40,  check: s => s.accCount >= 1 },
+  { id:'acc_3',        cat:'帳戶管理', icon:'💳', name:'多帳戶玩家',     desc:'同時擁有 3 個以上帳戶',                  xp:80,  check: s => s.accCount >= 3 },
+  { id:'acc_5',        cat:'帳戶管理', icon:'🏛️', name:'帳戶管理達人',   desc:'同時擁有 5 個以上帳戶',                  xp:150, check: s => s.accCount >= 5 },
+  { id:'transfer',     cat:'帳戶管理', icon:'🔄', name:'帳戶轉帳',       desc:'完成第一次帳戶轉帳',                    xp:50,  check: s => s.transferCount >= 1 },
+  { id:'transfer_10',  cat:'帳戶管理', icon:'⚡', name:'轉帳老手',       desc:'累計完成 10 次帳戶轉帳',                xp:100, check: s => s.transferCount >= 10 },
+  { id:'acc_positive', cat:'帳戶管理', icon:'✅', name:'全部帳戶正餘額', desc:'所有帳戶都保持正餘額',                  xp:120, check: s => s.allAccPositive },
+  { id:'acc_million',  cat:'帳戶管理', icon:'💎', name:'百萬身家',       desc:'所有帳戶合計淨資產超過 1,000,000',       xp:500, check: s => s.totalNetWorth >= 1000000 },
 
   // 預算規劃
-  { id:'budget_first',cat:'預算規劃', icon:'🎯', name:'預算啟動',     desc:'設定第一個預算',              xp:50,  check: s => s.budgetCount >= 1 },
-  { id:'budget_kept', cat:'預算規劃', icon:'🛡️', name:'預算守護者',   desc:'當月至少一項預算未超支',      xp:80,  check: s => s.budgetKept },
-  { id:'budget_all',  cat:'預算規劃', icon:'🏅', name:'全面控制',     desc:'當月所有預算都未超支',        xp:150, check: s => s.allBudgetsKept },
-  { id:'budget_3',    cat:'預算規劃', icon:'📋', name:'全方位規劃',   desc:'同時設定 3 個以上預算',       xp:80,  check: s => s.budgetCount >= 3 },
+  { id:'budget_first', cat:'預算規劃', icon:'🎯', name:'預算啟動',       desc:'設定第一個預算',                        xp:50,  check: s => s.budgetCount >= 1 },
+  { id:'budget_3',     cat:'預算規劃', icon:'📋', name:'全方位規劃',     desc:'同時設定 3 個以上預算',                 xp:80,  check: s => s.budgetCount >= 3 },
+  { id:'budget_kept',  cat:'預算規劃', icon:'🛡️', name:'預算守護者',     desc:'當月至少一項預算未超支',                xp:80,  check: s => s.budgetKept },
+  { id:'budget_all',   cat:'預算規劃', icon:'🏅', name:'全面控制',       desc:'當月所有預算都未超支',                  xp:180, check: s => s.allBudgetsKept },
+  { id:'budget_3m',    cat:'預算規劃', icon:'🏆', name:'三月守預算',     desc:'連續 3 個月所有預算未超支',              xp:350, check: s => s.budgetKeptMonths >= 3 },
 
   // 存錢目標
-  { id:'goal_first',  cat:'存錢目標', icon:'🌠', name:'夢想起點',     desc:'設定第一個存錢目標',          xp:50,  check: s => s.goalCount >= 1 },
-  { id:'goal_half',   cat:'存錢目標', icon:'⛽', name:'一半到達',     desc:'某個目標達到 50% 進度',       xp:80,  check: s => s.goalHalf },
-  { id:'goal_done',   cat:'存錢目標', icon:'🎉', name:'目標達成！',   desc:'完成第一個存錢目標',          xp:200, check: s => s.goalDone >= 1 },
+  { id:'goal_first',   cat:'存錢目標', icon:'🌠', name:'夢想起點',       desc:'設定第一個存錢目標',                    xp:50,  check: s => s.goalCount >= 1 },
+  { id:'goal_3',       cat:'存錢目標', icon:'🎪', name:'多目標並進',     desc:'同時追蹤 3 個以上存錢目標',              xp:80,  check: s => s.goalCount >= 3 },
+  { id:'goal_half',    cat:'存錢目標', icon:'⛽', name:'一半到達',       desc:'某個目標達到 50% 進度',                 xp:80,  check: s => s.goalHalf },
+  { id:'goal_done',    cat:'存錢目標', icon:'🎉', name:'目標達成！',     desc:'完成第一個存錢目標',                    xp:250, check: s => s.goalDone >= 1 },
+  { id:'goal_3done',   cat:'存錢目標', icon:'👑', name:'連達三目標',     desc:'累計完成 3 個存錢目標',                 xp:500, check: s => s.goalDone >= 3 },
 
   // 週期帳
-  { id:'rec_first',   cat:'週期帳',   icon:'🔁', name:'固定支出',     desc:'設定第一筆週期帳',            xp:40,  check: s => s.recCount >= 1 },
-  { id:'rec_3',       cat:'週期帳',   icon:'📅', name:'週期達人',     desc:'設定 3 筆以上週期帳',         xp:80,  check: s => s.recCount >= 3 },
+  { id:'rec_first',    cat:'週期帳',   icon:'🔁', name:'固定支出',       desc:'設定第一筆週期帳',                      xp:40,  check: s => s.recCount >= 1 },
+  { id:'rec_3',        cat:'週期帳',   icon:'📅', name:'週期達人',       desc:'設定 3 筆以上週期帳',                   xp:80,  check: s => s.recCount >= 3 },
+  { id:'rec_5',        cat:'週期帳',   icon:'🤖', name:'自動化管理',     desc:'設定 5 筆以上週期帳，完全掌握固定支出',  xp:150, check: s => s.recCount >= 5 },
 ];
 
 let achData = DB.get('achData') || { claimedIds: [], totalXp: 0 };
@@ -3390,13 +3488,14 @@ function computeAchStats() {
   const incomeCount = transactions.filter(t => t.type === 'income').length;
   const transferCount = transactions.filter(t => t.type === 'transfer').length;
   const hasNote = transactions.some(t => t.note && t.note.trim());
+  const noteCount = transactions.filter(t => t.note && t.note.trim()).length;
   const maxIncome = Math.max(0, ...transactions.filter(t => t.type === 'income').map(t => t.amount));
 
   // unique expense categories
   const expCats = new Set(transactions.filter(t => t.type === 'expense').map(t => t.category));
   const catCount = expCats.size;
 
-  // current month balance
+  // current month transactions
   const curMonthTx = transactions.filter(t => {
     const d = new Date(t.date);
     return d.getFullYear() === curY && d.getMonth() === curM;
@@ -3407,7 +3506,7 @@ function computeAchStats() {
 
   // consecutive positive months
   let posMonths = 0;
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 12; i++) {
     let d = new Date(curY, curM - i, 1);
     let y = d.getFullYear(), m = d.getMonth();
     let mTx = transactions.filter(t => { const td = new Date(t.date); return td.getFullYear()===y && td.getMonth()===m; });
@@ -3416,14 +3515,39 @@ function computeAchStats() {
     if (mInc > mExp) posMonths++; else break;
   }
 
-  // zero expense day
-  const expDays = new Set(transactions.filter(t=>t.type==='expense').map(t=>t.date));
-  const allDays = new Set(transactions.map(t=>t.date));
-  const hasZeroExpDay = [...allDays].some(d => !expDays.has(d));
+  // day streak: consecutive days with any transaction
+  const txDates = new Set(transactions.map(t => t.date));
+  let dayStreak = 0;
+  for (let i = 0; i < 365; i++) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const ds = d.toISOString().split('T')[0];
+    if (txDates.has(ds)) dayStreak++;
+    else break;
+  }
+
+  // expense drop: current month expense < 70% of last month
+  let expDropMonth = false;
+  {
+    const lastD = new Date(curY, curM - 1, 1);
+    const lastY = lastD.getFullYear(), lastMo = lastD.getMonth();
+    const lastTx = transactions.filter(t=>{ const d=new Date(t.date); return d.getFullYear()===lastY && d.getMonth()===lastMo; });
+    const lastExp = lastTx.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+    if (lastExp > 0 && monthExpense > 0 && monthExpense < lastExp * 0.7) expDropMonth = true;
+  }
+
+  // low impulse: entertainment+shopping < 20% of total monthly expense
+  let lowImpulseMonth = false;
+  if (monthExpense > 0) {
+    const impulseKeywords = ['娛樂','購物','遊戲','電影','衣服','服飾','美容','旅遊'];
+    const impulseTx = curMonthTx.filter(t => t.type==='expense' && impulseKeywords.some(k => (t.category||'').includes(k)));
+    const impulseTotal = impulseTx.reduce((s,t)=>s+t.amount,0);
+    if ((impulseTotal / monthExpense) < 0.2) lowImpulseMonth = true;
+  }
 
   // accounts
   const accCount = accounts.length;
   const allAccPositive = accounts.length > 0 && accounts.every(a => a.balance >= 0);
+  const totalNetWorth = accounts.reduce((s,a)=>s+(a.balance||0),0);
 
   // budgets
   const budgetCount = budgets.length;
@@ -3437,6 +3561,21 @@ function computeAchStats() {
     allBudgetsKept = keptList.every(Boolean);
   }
 
+  // consecutive months all budgets kept
+  let budgetKeptMonths = 0;
+  if (budgets.length > 0) {
+    for (let i = 0; i < 6; i++) {
+      const d = new Date(curY, curM - i, 1);
+      const y = d.getFullYear(), m = d.getMonth();
+      const mTx = transactions.filter(t=>{ const td=new Date(t.date); return td.getFullYear()===y&&td.getMonth()===m; });
+      const allKept = budgets.every(b => {
+        const spent = mTx.filter(t=>t.type==='expense'&&t.category===b.category).reduce((s,t)=>s+t.amount,0);
+        return spent <= b.amount;
+      });
+      if (allKept) budgetKeptMonths++; else break;
+    }
+  }
+
   // goals
   const goalCount = goals.length;
   const goalHalf = goals.some(g => g.target > 0 && (g.saved||0) / g.target >= 0.5);
@@ -3445,9 +3584,11 @@ function computeAchStats() {
   // recurring
   const recCount = recurring.length;
 
-  return { txCount, incomeCount, transferCount, hasNote, maxIncome, catCount, monthBalance,
-           posMonths, hasZeroExpDay, accCount, allAccPositive, budgetCount, budgetKept,
-           allBudgetsKept, goalCount, goalHalf, goalDone, recCount };
+  return { txCount, incomeCount, transferCount, hasNote, noteCount, maxIncome, catCount,
+           monthBalance, posMonths, dayStreak, expDropMonth, lowImpulseMonth,
+           accCount, allAccPositive, totalNetWorth,
+           budgetCount, budgetKept, allBudgetsKept, budgetKeptMonths,
+           goalCount, goalHalf, goalDone, recCount };
 }
 
 function getLevelInfo(xp) {
@@ -3473,6 +3614,53 @@ function showLvlUpToast(msg) {
   lvlupTimer = setTimeout(() => t.classList.remove('show'), 3500);
 }
 
+// Achievement popup queue
+let achPopupQueue = [];
+let achPopupShowing = false;
+
+function closeAchPopup() {
+  const overlay = document.getElementById('achPopupOverlay');
+  overlay.classList.remove('show');
+  achPopupShowing = false;
+  setTimeout(() => {
+    if (achPopupQueue.length > 0) showNextAchPopup();
+  }, 400);
+}
+
+function showNextAchPopup() {
+  if (achPopupQueue.length === 0 || achPopupShowing) return;
+  achPopupShowing = true;
+  const { def, newXp, newLv, prevLv } = achPopupQueue.shift();
+
+  document.getElementById('achPopupIcon').textContent = def.icon;
+  document.getElementById('achPopupName').textContent = def.name;
+  document.getElementById('achPopupDesc').textContent = def.desc;
+  document.getElementById('achPopupXp').textContent = '+' + def.xp;
+
+  // Show user profile in popup
+  const userEl = document.getElementById('achPopupUser');
+  if (profile.name) {
+    const info = getLevelInfo(newXp);
+    document.getElementById('achPopupUserAvatar').textContent = getInitials(profile.name);
+    document.getElementById('achPopupUserName').textContent = profile.name;
+    document.getElementById('achPopupUserLv').textContent = `Lv.${info.lv} ${info.name} · ${newXp} XP`;
+    userEl.style.display = 'flex';
+  } else {
+    userEl.style.display = 'none';
+  }
+
+  // Lvlup message on close btn if leveled up
+  const closeBtn = document.querySelector('.ach-popup-close');
+  if (newLv > prevLv) {
+    closeBtn.textContent = `🎊 升級到 Lv.${newLv}！繼續加油`;
+  } else {
+    closeBtn.textContent = '太棒了！繼續加油 💪';
+  }
+
+  const overlay = document.getElementById('achPopupOverlay');
+  overlay.classList.add('show');
+}
+
 function claimAchievement(id) {
   if (achData.claimedIds.includes(id)) return;
   const def = ACH_DEFS.find(a => a.id === id);
@@ -3480,17 +3668,18 @@ function claimAchievement(id) {
   const stats = computeAchStats();
   if (!def.check(stats)) return;
 
-  const prevLv = getLevelInfo(achData.totalXp).lv;
+  const prevInfo = getLevelInfo(achData.totalXp);
+  const prevLv = prevInfo.lv;
   achData.claimedIds.push(id);
   achData.totalXp += def.xp;
   DB.set('achData', achData);
-  const newLv = getLevelInfo(achData.totalXp).lv;
+  const newInfo = getLevelInfo(achData.totalXp);
+  const newLv = newInfo.lv;
 
-  showToast(`🏆 成就達成：${def.name} +${def.xp} XP`);
-  if (newLv > prevLv) {
-    const info = getLevelInfo(achData.totalXp);
-    setTimeout(() => showLvlUpToast(`🎉 升級！你已達到 Lv.${info.lv} ${info.name}`), 600);
-  }
+  // Queue popup notification
+  achPopupQueue.push({ def, newXp: achData.totalXp, newLv, prevLv });
+  if (!achPopupShowing) showNextAchPopup();
+
   renderAchievements();
 }
 
@@ -3500,6 +3689,18 @@ function renderAchievements() {
   const claimed = achData.claimedIds;
   const total = ACH_DEFS.length;
   const claimedCount = claimed.length;
+
+  // Update hero user profile
+  const heroUser = document.getElementById('ach-hero-user');
+  const heroAvatar = document.getElementById('ach-hero-user-avatar');
+  const heroName = document.getElementById('ach-hero-user-name');
+  if (profile.name) {
+    heroAvatar.textContent = getInitials(profile.name);
+    heroName.textContent = profile.name;
+    if (heroUser) heroUser.style.display = 'flex';
+  } else {
+    if (heroUser) heroUser.style.display = 'none';
+  }
 
   // Update hero
   document.getElementById('ach-avatar-emoji').textContent = info.avatar;
@@ -3523,7 +3724,7 @@ function renderAchievements() {
     `<button class="ach-tab${c === achActiveTab ? ' active' : ''}" onclick="setAchTab('${c}')">${c}</button>`
   ).join('');
 
-  // Achievement list
+  // Achievement list with real progress
   const filtered = achActiveTab === '全部' ? ACH_DEFS : ACH_DEFS.filter(a => a.cat === achActiveTab);
   const listEl = document.getElementById('ach-list');
   listEl.innerHTML = filtered.map(def => {
@@ -3537,7 +3738,6 @@ function renderAchievements() {
     const actionBtn = isUnlocked
       ? `<button class="ach-claim-btn" onclick="claimAchievement('${def.id}')">領取</button>`
       : '';
-    // simple progress: boolean or count-based
     const prog = isClaimed ? 100 : isUnlocked ? 100 : 0;
     const progLabel = isClaimed ? '已完成' : isUnlocked ? '可領取！' : '未達成';
 
