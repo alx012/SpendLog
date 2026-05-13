@@ -81,12 +81,13 @@
     .sidebar-group .sidebar-nav-item { padding-left: 32px; font-size: .85rem; }
 
     .bottom-nav { left: 220px !important; right: 0 !important; width: auto !important; padding-left: 0; }
-    .main { flex: 1; min-width: 0; height: 100%; overflow-y: auto; overflow-x: hidden; padding-bottom: calc(var(--bottom-h) + 16px); }
+    .main { flex: 1; min-width: 0; height: 100%; overflow-y: auto; overflow-x: hidden; padding-bottom: 0; }
     .page { max-width: 860px; margin: 0 auto; }
     .top-bar { padding: 32px 32px 12px; position: static; background: transparent; }
   }
   
   .main { flex: 1; overflow-y: auto; overflow-x: hidden; padding-bottom: calc(var(--bottom-h) + 16px); }
+  @media(min-width:860px) { .main { padding-bottom: 0; } }
   
   .top-bar { padding: 20px 20px 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; position: sticky; top: 0; z-index: 50; background: var(--bg); }
   .top-bar h2 { font-family: 'DM Serif Display'; font-size: 1.5rem; flex-shrink: 0; }
@@ -1712,6 +1713,11 @@ let recurring    = DB.get('recurring') || [];
 let goals        = DB.get('goals')     || [];
 let settings     = DB.get('settings')  || { currency: 'TWD', notif: true };
 
+// ── 提前宣告，避免 bootstrap / pushToSupabase 引用到 undefined ──
+let currentTheme = DB.get('theme')   || 'midnight';
+let profile      = DB.get('profile') || { name: '', birthday: '', email: '', password: '' };
+let achData      = DB.get('achData') || { claimedIds: [], totalXp: 0 };
+
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 
 // ── Debounced save ────────────────────────────────────
@@ -1753,10 +1759,11 @@ async function pushToSupabase() {
     // meta row
     ops.push(_sb.from('user_data').upsert({
       user_id: uid_col,
-      settings: JSON.stringify(settings),
-      profile:  JSON.stringify(profile),
-      ach:      JSON.stringify(achData),
-      theme:    currentTheme,
+      settings:    JSON.stringify(settings),
+      profile:     JSON.stringify(profile),
+      ach:         JSON.stringify(achData),
+      theme:       currentTheme,
+      rec_applied: JSON.stringify(DB.get('rec_applied') || {}),
     },{onConflict:'user_id'}));
     await Promise.all(ops);
     setSyncBadge('ok');
@@ -1786,10 +1793,15 @@ async function pullFromSupabase() {
   if (goalR.data) goals        = goalR.data.map(strip);
   if (metaR.data) {
     const m = metaR.data;
-    if (m.settings) try { settings = JSON.parse(m.settings); } catch {}
-    if (m.profile)  try { profile  = JSON.parse(m.profile);  } catch {}
-    if (m.ach)      try { achData  = JSON.parse(m.ach);      } catch {}
-    if (m.theme)    { currentTheme = m.theme; applyTheme(m.theme); }
+    if (m.settings)    try { settings = JSON.parse(m.settings); } catch {}
+    if (m.profile)     try { profile  = JSON.parse(m.profile);  } catch {}
+    if (m.ach)         try { achData  = JSON.parse(m.ach);      } catch {}
+    if (m.rec_applied) try { DB.set('rec_applied', JSON.parse(m.rec_applied)); } catch {}
+    if (m.theme)       { currentTheme = m.theme; applyTheme(m.theme); }
+  }
+  // 確保 profile.email 與登入帳號同步
+  if (currentUser && currentUser.email) {
+    profile.email = currentUser.email;
   }
   // mirror to localStorage
   DB.set('txs',transactions); DB.set('accounts',accounts); DB.set('budgets',budgets);
@@ -3619,7 +3631,6 @@ const THEMES = [
   },
 ];
 
-let currentTheme = DB.get('theme') || 'midnight';
 let openThemeCat = null;
 
 function showThemeCats() {
@@ -3693,8 +3704,6 @@ function renderThemeGrid(catId) {
 // ═══════════════════════════
 // PROFILE
 // ═══════════════════════════
-let profile = DB.get('profile') || { name: '', birthday: '', email: '', password: '' };
-
 function saveProfileData() {
   DB.set('profile', profile);
   if (currentUser) { clearTimeout(_saveTimer); _saveTimer = setTimeout(pushToSupabase, 900); }
@@ -3935,7 +3944,6 @@ const ACH_DEFS = [
   { id:'rec_mix',      cat:'週期帳',   icon:'⚖️', name:'收支週期並重',   desc:'同時擁有週期收入和週期支出各 2 筆以上', xp:120, check: s => s.recIncCount >= 2 && s.recExpCount >= 2 },
 ];
 
-let achData = DB.get('achData') || { claimedIds: [], totalXp: 0 };
 let achActiveTab = '全部';
 
 function computeAchStats() {
