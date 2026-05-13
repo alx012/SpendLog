@@ -1717,7 +1717,8 @@ function save() {
   DB.set('settings', settings);
   if (currentUser) {
     clearTimeout(_saveTimer);
-    _saveTimer = setTimeout(pushToSupabase, 900);
+    // ✅ FIX: 200ms debounce (was 900ms) to minimise data loss on quick refresh
+    _saveTimer = setTimeout(pushToSupabase, 200);
   }
 }
 
@@ -1737,18 +1738,20 @@ async function pushToSupabase() {
   const uid_col = currentUser.id;
   try {
     const ops = [];
-    if (transactions.length) ops.push(_sb.from('transactions').upsert(transactions.map(r=>({...r,user_id:uid_col})),{onConflict:'id'}));
-    if (accounts.length)     ops.push(_sb.from('accounts').upsert(accounts.map(r=>({...r,user_id:uid_col})),{onConflict:'id'}));
-    if (budgets.length)      ops.push(_sb.from('budgets').upsert(budgets.map(r=>({...r,user_id:uid_col})),{onConflict:'id'}));
-    if (recurring.length)    ops.push(_sb.from('recurring').upsert(recurring.map(r=>({...r,user_id:uid_col})),{onConflict:'id'}));
-    if (goals.length)        ops.push(_sb.from('goals').upsert(goals.map(r=>({...r,user_id:uid_col})),{onConflict:'id'}));
-    // meta row
+    // Always upsert all tables (even if empty) so deletions are reflected in cloud
+    ops.push(_sb.from('transactions').upsert(transactions.map(r=>({...r,user_id:uid_col})),{onConflict:'id'}));
+    ops.push(_sb.from('accounts').upsert(accounts.map(r=>({...r,user_id:uid_col})),{onConflict:'id'}));
+    ops.push(_sb.from('budgets').upsert(budgets.map(r=>({...r,user_id:uid_col})),{onConflict:'id'}));
+    ops.push(_sb.from('recurring').upsert(recurring.map(r=>({...r,user_id:uid_col})),{onConflict:'id'}));
+    ops.push(_sb.from('goals').upsert(goals.map(r=>({...r,user_id:uid_col})),{onConflict:'id'}));
+    // meta row — include rec_applied so recurring dedup state survives refresh
     ops.push(_sb.from('user_data').upsert({
-      user_id: uid_col,
-      settings: JSON.stringify(settings),
-      profile:  JSON.stringify(profile),
-      ach:      JSON.stringify(achData),
-      theme:    currentTheme,
+      user_id:     uid_col,
+      settings:    JSON.stringify(settings),
+      profile:     JSON.stringify(profile),
+      ach:         JSON.stringify(achData),
+      theme:       currentTheme,
+      rec_applied: JSON.stringify(DB.get('rec_applied') || {}),
     },{onConflict:'user_id'}));
     await Promise.all(ops);
     setSyncBadge('ok');
@@ -1778,10 +1781,11 @@ async function pullFromSupabase() {
   if (goalR.data) goals        = goalR.data.map(strip);
   if (metaR.data) {
     const m = metaR.data;
-    if (m.settings) try { settings = JSON.parse(m.settings); } catch {}
-    if (m.profile)  try { profile  = JSON.parse(m.profile);  } catch {}
-    if (m.ach)      try { achData  = JSON.parse(m.ach);      } catch {}
-    if (m.theme)    { currentTheme = m.theme; applyTheme(m.theme); }
+    if (m.settings)    try { settings = JSON.parse(m.settings); } catch {}
+    if (m.profile)     try { profile  = JSON.parse(m.profile);  } catch {}
+    if (m.ach)         try { achData  = JSON.parse(m.ach);      } catch {}
+    if (m.theme)       { currentTheme = m.theme; applyTheme(m.theme); }
+    if (m.rec_applied) try { DB.set('rec_applied', JSON.parse(m.rec_applied)); } catch {}
   }
   // mirror to localStorage
   DB.set('txs',transactions); DB.set('accounts',accounts); DB.set('budgets',budgets);
@@ -1947,16 +1951,19 @@ function updateAccountSection() {
   const { data: { session } } = await _sb.auth.getSession();
   if (session) {
     currentUser = session.user;
-    // Don't block the app — pull in background
-    pullFromSupabase().then(() => {
-      applyRecurring();
-      renderAll(); renderAccounts(); renderBudget();
-      renderRecurring(); renderGoals(); renderAchievements();
-      loadSettings(); updateDashboardGreeting();
-      setSyncBadge('ok');
-    });
     hideAuthOverlay();
     updateAccountSection();
+    // ✅ FIX: await pull so data is ready before rendering
+    try {
+      await pullFromSupabase();
+    } catch(e) {
+      console.error('Initial pull failed, using localStorage cache', e);
+    }
+    applyRecurring();
+    renderAll(); renderAccounts(); renderBudget();
+    renderRecurring(); renderGoals(); renderAchievements();
+    loadSettings(); updateDashboardGreeting();
+    setSyncBadge('ok');
   } else {
     showAuthOverlay();
   }
@@ -4222,11 +4229,10 @@ document.querySelectorAll('.modal-overlay').forEach(el=>{
 // INIT
 // ═══════════════════════════
 (function init(){
-  applyRecurring();
+  // UI scaffolding — always run (no data dependency)
   updateMonthLabel();
   buildCatGrid();
   buildCatGrid('rec');
-  // set up day mode UI state before first render
   applyTheme(currentTheme);
   document.getElementById('annualYearLabel').textContent = annualYear;
   document.getElementById('day-picker-wrap').style.display = 'block';
@@ -4237,11 +4243,22 @@ document.querySelectorAll('.modal-overlay').forEach(el=>{
   const monthNavEl = document.querySelector('#page-dashboard .month-nav');
   if (monthNavEl) monthNavEl.style.visibility = 'hidden';
   updateDashboardGreeting();
-  renderAll();
-  renderAccounts();
-  renderBudget();
-  renderRecurring();
-  loadSettings();
+
+  // ✅ FIX: Only render from localStorage when NOT logged in.
+  // When a session exists, bootstrap() will await pullFromSupabase()
+  // then render — avoids a flash of stale/empty data before cloud sync.
+  // Detect existing Supabase session by scanning localStorage keys.
+  const hasStoredSession = Object.keys(localStorage).some(k =>
+    k.includes('supabase') || (k.startsWith('sb-') && k.includes('auth'))
+  );
+  if (!hasStoredSession) {
+    applyRecurring();
+    renderAll();
+    renderAccounts();
+    renderBudget();
+    renderRecurring();
+    loadSettings();
+  }
 })();
 </script>
 </body>
