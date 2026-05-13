@@ -755,9 +755,7 @@
         </div>
       </div>
       <button class="btn-primary" id="auth-login-btn" onclick="handleLogin()" style="margin-top:4px">登入</button>
-      <div class="auth-divider">忘記密碼？<a onclick="handleForgotPassword()">重設密碼</a>
-        &nbsp;·&nbsp; 或 <a onclick="continueOffline()">不登入，離線使用</a>
-      </div>
+      <div class="auth-divider">忘記密碼？<a onclick="handleForgotPassword()">重設密碼</a></div>
     </div>
 
     <!-- 註冊表單 -->
@@ -785,7 +783,6 @@
         </div>
       </div>
       <button class="btn-primary" id="auth-register-btn" onclick="handleRegister()" style="margin-top:4px">建立帳號</button>
-      <div class="auth-divider"><a onclick="continueOffline()">不登入，離線使用</a></div>
     </div>
   </div>
 </div>
@@ -1268,19 +1265,14 @@
           <div class="settings-item" style="cursor:default;padding:12px 0">
             <div style="flex:1;min-width:0">
               <div class="label">登入狀態</div>
-              <div class="sublabel" id="settings-user-email" style="word-break:break-all">離線模式</div>
+              <div class="sublabel" id="settings-user-email" style="word-break:break-all">—</div>
             </div>
-            <span class="sync-badge local" id="sync-badge">◎ 本機</span>
+            <span class="sync-badge" id="sync-badge">☁ 已同步</span>
           </div>
           <div id="logout-section" style="display:none">
             <button class="logout-btn" onclick="handleLogout()">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
               登出
-            </button>
-          </div>
-          <div id="login-prompt-section" style="display:none">
-            <button class="btn-primary" style="margin-top:8px" onclick="showAuthOverlay()">
-              登入 / 啟用雲端同步
             </button>
           </div>
         </div>
@@ -1750,15 +1742,13 @@ async function pushToSupabase() {
     if (budgets.length)      ops.push(_sb.from('budgets').upsert(budgets.map(r=>({...r,user_id:uid_col})),{onConflict:'id'}));
     if (recurring.length)    ops.push(_sb.from('recurring').upsert(recurring.map(r=>({...r,user_id:uid_col})),{onConflict:'id'}));
     if (goals.length)        ops.push(_sb.from('goals').upsert(goals.map(r=>({...r,user_id:uid_col})),{onConflict:'id'}));
-    // meta row — ✅ FIX: 加入 rec_applied 同步
-    const recApplied = DB.get('rec_applied') || {};
+    // meta row
     ops.push(_sb.from('user_data').upsert({
-      user_id:     uid_col,
-      settings:    JSON.stringify(settings),
-      profile:     JSON.stringify(profile),
-      ach:         JSON.stringify(achData),
-      theme:       currentTheme,
-      rec_applied: JSON.stringify(recApplied),
+      user_id: uid_col,
+      settings: JSON.stringify(settings),
+      profile:  JSON.stringify(profile),
+      ach:      JSON.stringify(achData),
+      theme:    currentTheme,
     },{onConflict:'user_id'}));
     await Promise.all(ops);
     setSyncBadge('ok');
@@ -1788,12 +1778,10 @@ async function pullFromSupabase() {
   if (goalR.data) goals        = goalR.data.map(strip);
   if (metaR.data) {
     const m = metaR.data;
-    if (m.settings)    try { settings = JSON.parse(m.settings); } catch {}
-    if (m.profile)     try { profile  = JSON.parse(m.profile);  } catch {}
-    if (m.ach)         try { achData  = JSON.parse(m.ach);      } catch {}
-    if (m.theme)       { currentTheme = m.theme; applyTheme(m.theme); }
-    // ✅ FIX: 還原 rec_applied（週期帳套用紀錄）
-    if (m.rec_applied) try { DB.set('rec_applied', JSON.parse(m.rec_applied)); } catch {}
+    if (m.settings) try { settings = JSON.parse(m.settings); } catch {}
+    if (m.profile)  try { profile  = JSON.parse(m.profile);  } catch {}
+    if (m.ach)      try { achData  = JSON.parse(m.ach);      } catch {}
+    if (m.theme)    { currentTheme = m.theme; applyTheme(m.theme); }
   }
   // mirror to localStorage
   DB.set('txs',transactions); DB.set('accounts',accounts); DB.set('budgets',budgets);
@@ -1856,14 +1844,6 @@ function toggleAuthPwd(inputId, btn) {
     : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
 }
 
-// ── Continue without login ────────────────────────────
-function continueOffline() {
-  currentUser = null;
-  hideAuthOverlay();
-  updateAccountSection();
-  showToast('📴 離線模式：資料僅存於本機');
-}
-
 // ── Login ─────────────────────────────────────────────
 async function handleLogin() {
   const email = document.getElementById('auth-email').value.trim();
@@ -1921,9 +1901,7 @@ async function onLoginSuccess(isNewAccount) {
     await pullFromSupabase();     // pull cloud → local
   }
   hideAuthOverlay();
-  // ✅ FIX: 確保 profile 未設定 email 時，使用登入帳號的 email
-  if (!profile.email && currentUser) profile.email = currentUser.email;
-  updateAccountSection();        // 這裡會連帶呼叫 renderProfileCard & updateDashboardGreeting
+  updateAccountSection();
   // re-render everything with fresh data
   applyRecurring();
   renderAll();
@@ -1933,43 +1911,35 @@ async function onLoginSuccess(isNewAccount) {
   renderGoals();
   renderAchievements();
   loadSettings();
+  updateDashboardGreeting();
   setSyncBadge('ok');
   showToast('✅ 雲端同步完成');
 }
 
 // ── Logout ────────────────────────────────────────────
 async function handleLogout() {
-  if (!confirm('確定要登出嗎？登出後將切換為離線模式，資料仍保留在本機。')) return;
+  if (!confirm('確定要登出嗎？')) return;
   await _sb.auth.signOut();
   currentUser = null;
-  updateAccountSection();
-  showToast('👋 已登出，切換為離線模式');
+  showAuthOverlay();
+  showToast('👋 已登出');
 }
 
 // ── Update settings account section ──────────────────
 function updateAccountSection() {
-  const emailEl   = document.getElementById('settings-user-email');
-  const logoutEl  = document.getElementById('logout-section');
-  const loginEl   = document.getElementById('login-prompt-section');
+  const emailEl  = document.getElementById('settings-user-email');
+  const logoutEl = document.getElementById('logout-section');
+  const loginEl  = document.getElementById('login-prompt-section');
   if (currentUser) {
-    // 設定頁顯示登入 email（auth 帳號）
     if (emailEl)  emailEl.textContent = currentUser.email;
     if (logoutEl) logoutEl.style.display = '';
     if (loginEl)  loginEl.style.display  = 'none';
     setSyncBadge('ok');
-    // ✅ FIX: 如果 profile.email 尚未設定，預設填入登入 email
-    if (!profile.email) {
-      profile.email = currentUser.email;
-    }
   } else {
-    if (emailEl)  emailEl.textContent = '離線模式';
     if (logoutEl) logoutEl.style.display = 'none';
-    if (loginEl)  loginEl.style.display  = '';
-    setSyncBadge('local');
+    if (loginEl)  loginEl.style.display  = 'none';
+    showAuthOverlay();
   }
-  // ✅ FIX: 每次帳號狀態變更都重新渲染個人資料卡片與問候語
-  renderProfileCard();
-  updateDashboardGreeting();
 }
 
 // ── Bootstrap: check existing session ────────────────
@@ -1982,17 +1952,12 @@ function updateAccountSection() {
       applyRecurring();
       renderAll(); renderAccounts(); renderBudget();
       renderRecurring(); renderGoals(); renderAchievements();
-      loadSettings();
-      // ✅ FIX: 資料拉取完成後，重新渲染個人資料（profile 已從 Supabase 更新）
-      updateAccountSection();
-      updateDashboardGreeting();
+      loadSettings(); updateDashboardGreeting();
       setSyncBadge('ok');
     });
     hideAuthOverlay();
     updateAccountSection();
   } else {
-    // Show auth overlay — but app underneath is already interactive
-    // (user can dismiss with "離線使用")
     showAuthOverlay();
   }
   // Auth state change listener
@@ -2002,7 +1967,7 @@ function updateAccountSection() {
       await onLoginSuccess(false);
     } else if (event === 'SIGNED_OUT') {
       currentUser = null;
-      updateAccountSection();
+      showAuthOverlay();
     }
   });
 })();
