@@ -388,7 +388,7 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
               日
             </button>
-            <button class="vm-btn" id="vm-cal" onclick="setViewMode('calendar')">
+            <button class="vm-btn" id="vm-calendar" onclick="setViewMode('calendar')">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><rect x="8" y="14" width="3" height="3" rx="0.5" fill="currentColor" stroke="none"/><rect x="13" y="14" width="3" height="3" rx="0.5" fill="currentColor" stroke="none"/></svg>
               日曆
             </button>
@@ -996,7 +996,7 @@ function setViewMode(mode) {
     if (monthNavEl) monthNavEl.style.visibility = 'hidden';
     // default to today if not set
     const dp = document.getElementById('day-picker');
-    if (!dp.value) dp.value = new Date().toISOString().split('T')[0];
+    if (!dp.value) dp.value = localDateStr(new Date());
   } else if (mode === 'calendar') {
     dayPickerWrap.style.display = 'none';
     calendarWrap.style.display  = 'block';
@@ -1082,14 +1082,18 @@ function renderDayView() {
 
 function shiftDay(delta, today) {
   const dp = document.getElementById('day-picker');
-  let d = dp.value ? new Date(dp.value + 'T00:00:00') : new Date();
+  let base = dp.value || localDateStr(new Date());
   if (today) {
-    d = new Date();
+    dp.value = localDateStr(new Date());
   } else {
-    d.setDate(d.getDate() + delta);
+    const parts = base.split('-');
+    const d = new Date(+parts[0], +parts[1]-1, +parts[2] + delta);
+    dp.value = localDateStr(d);
   }
-  dp.value = d.toISOString().split('T')[0];
   renderAll();
+}
+function localDateStr(d) {
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
 }
 
 // ── Calendar view ──
@@ -1116,7 +1120,7 @@ function renderCalendarView() {
     const di = calSelectedDate.split('-');
     const title = document.getElementById('list-section-title');
     const selectedDs = calSelectedDate;
-    if (title) title.innerHTML = `${parseInt(di[1])} 月 ${parseInt(di[2])} 日 的明細&nbsp;<button onclick="calDayClick('${selectedDs}')" style="background:var(--surface2);border:1px solid var(--border);color:var(--text3);padding:2px 8px;border-radius:6px;font-size:.68rem;cursor:pointer;font-family:'DM Sans';vertical-align:middle">✕ 關閉</button>`;
+    if (title) title.innerHTML = `${parseInt(di[1])} 月 ${parseInt(di[2])} 日 的明細 <button onclick="calDayClick('${selectedDs}')" style="background:var(--surface2);border:1px solid var(--border);color:var(--text3);padding:2px 8px;border-radius:6px;font-size:.68rem;cursor:pointer;font-family:sans-serif;vertical-align:middle">✕ 關閉</button>`;
 
     // inject day stats mini-row above tx list
     let statsEl = document.getElementById('cal-day-stats');
@@ -1223,19 +1227,48 @@ function calCell(d, ds, otherMonth, todayStr, data) {
 
 function calDayClick(ds) {
   if (calSelectedDate === ds) {
-    // deselect
     calSelectedDate = null;
   } else {
     calSelectedDate = ds;
-    // sync month if clicking overflow cell
-    const d = new Date(ds);
-    if (d.getMonth() !== currentMonth || d.getFullYear() !== currentYear) {
-      currentMonth = d.getMonth();
-      currentYear  = d.getFullYear();
+    const parts = ds.split('-');
+    const dm = parseInt(parts[1]) - 1;
+    const dy = parseInt(parts[0]);
+    if (dm !== currentMonth || dy !== currentYear) {
+      currentMonth = dm;
+      currentYear  = dy;
       updateMonthLabel();
     }
   }
-  renderCalendarView();
+  document.getElementById('calendar-wrap').style.display = 'block';
+  document.getElementById('list-wrap').style.display = calSelectedDate ? 'block' : 'none';
+  buildCalendar();
+  if (calSelectedDate) {
+    const dayTxs = getDayTxs(calSelectedDate);
+    const dayInc = dayTxs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+    const dayExp = dayTxs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+    const di = calSelectedDate.split('-');
+    const title = document.getElementById('list-section-title');
+    const sd = calSelectedDate;
+    if (title) title.innerHTML = `${parseInt(di[1])} 月 ${parseInt(di[2])} 日 的明細 <button onclick="calDayClick('${sd}')" style="background:var(--surface2);border:1px solid var(--border);color:var(--text3);padding:2px 8px;border-radius:6px;font-size:.68rem;cursor:pointer;font-family:sans-serif;vertical-align:middle">✕ 關閉</button>`;
+    let statsEl = document.getElementById('cal-day-stats');
+    if (!statsEl) {
+      statsEl = document.createElement('div');
+      statsEl.id = 'cal-day-stats';
+      statsEl.className = 'day-detail-stats';
+      document.getElementById('list-wrap').insertBefore(statsEl, document.getElementById('tx-list'));
+    }
+    statsEl.style.display = 'flex';
+    statsEl.innerHTML =
+      '<div class="day-stat"><div class="ds-label">收入</div><div class="ds-val" style="color:var(--green)">' + (dayInc>0?'+'+fmt(dayInc):'$0') + '</div></div>' +
+      '<div class="day-stat"><div class="ds-label">支出</div><div class="ds-val" style="color:var(--red)">' + (dayExp>0?'-'+fmt(dayExp):'$0') + '</div></div>' +
+      '<div class="day-stat"><div class="ds-label">結餘</div><div class="ds-val" style="color:var(--accent2)">' + fmt(dayInc-dayExp) + '</div></div>';
+    renderTxList(dayTxs, document.getElementById('tx-list'), '這天還沒有任何交易');
+  } else {
+    const statsEl = document.getElementById('cal-day-stats');
+    if (statsEl) statsEl.style.display = 'none';
+    const title = document.getElementById('list-section-title');
+    if (title) title.textContent = '近期交易';
+  }
 }
 
 // Short number formatter for calendar cells
