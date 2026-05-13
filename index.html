@@ -64,8 +64,8 @@
     .sg-label { font-size: .68rem; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: .1em; transition: .15s; }
     .sg-chevron { color: var(--text3); transition: transform .2s; width: 12px; height: 12px; flex-shrink: 0; }
     .sidebar-group.open .sg-chevron { transform: rotate(180deg); }
-    .sidebar-group-items { overflow: hidden; max-height: 0; transition: max-height .25s ease; }
-    .sidebar-group.open .sidebar-group-items { max-height: 200px; }
+    .sidebar-group-items { overflow: hidden; max-height: 0; transition: max-height .35s ease; }
+    .sidebar-group.open .sidebar-group-items { max-height: 400px; }
     .sidebar-group .sidebar-nav-item { padding-left: 32px; font-size: .85rem; }
 
     .bottom-nav { display: none; }
@@ -146,6 +146,17 @@
   .drawer-nav-item.active { background: var(--surface2); color: var(--accent2); border-left-color: var(--accent); }
   .drawer-nav-item svg { width: 20px; height: 20px; flex-shrink: 0; }
   .drawer-close { position: absolute; top: 14px; right: 14px; background: var(--surface2); border: 1px solid var(--border); color: var(--text2); width: 32px; height: 32px; border-radius: 8px; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; }
+
+  /* Drawer group sections (mobile) */
+  .drawer-group { margin: 4px 0; }
+  .drawer-group-header { display: flex; align-items: center; justify-content: space-between; padding: 8px 24px 6px; cursor: pointer; user-select: none; transition: .15s; }
+  .drawer-group-header:hover .dg-label { color: var(--text2); }
+  .dg-label { font-size: .68rem; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: .1em; transition: .15s; }
+  .dg-chevron { color: var(--text3); transition: transform .2s; width: 12px; height: 12px; flex-shrink: 0; }
+  .drawer-group.open .dg-chevron { transform: rotate(180deg); }
+  .drawer-group-items { overflow: hidden; max-height: 0; transition: max-height .3s ease; }
+  .drawer-group.open .drawer-group-items { max-height: 300px; }
+  .drawer-group .drawer-nav-item { padding-left: 34px; font-size: .88rem; }
 
   .hamburger { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: var(--surface2); border: 1px solid var(--border); border-radius: 9px; cursor: pointer; flex-shrink: 0; }
   .hamburger svg { width: 20px; height: 20px; color: var(--text2); }
@@ -852,22 +863,43 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
     帳戶
   </div>
-  <div class="drawer-nav-item" id="dnav-budget" onclick="drawerNav('budget')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-    預算
+
+  <!-- 分析群組 -->
+  <div class="drawer-group open" id="dg-analysis">
+    <div class="drawer-group-header" onclick="toggleDrawerGroup('dg-analysis')">
+      <span class="dg-label">分析</span>
+      <svg class="dg-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="drawer-group-items">
+      <div class="drawer-nav-item" id="dnav-charts" onclick="drawerNav('charts')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        報表
+      </div>
+      <div class="drawer-nav-item" id="dnav-annual" onclick="drawerNav('annual')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/></svg>
+        年度
+      </div>
+    </div>
   </div>
-  <div class="drawer-nav-item" id="dnav-charts" onclick="drawerNav('charts')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-    報表
+
+  <!-- 規劃群組 -->
+  <div class="drawer-group open" id="dg-plan">
+    <div class="drawer-group-header" onclick="toggleDrawerGroup('dg-plan')">
+      <span class="dg-label">規劃</span>
+      <svg class="dg-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="drawer-group-items">
+      <div class="drawer-nav-item" id="dnav-budget" onclick="drawerNav('budget')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        預算
+      </div>
+      <div class="drawer-nav-item" id="dnav-recurring" onclick="drawerNav('recurring')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+        週期帳
+      </div>
+    </div>
   </div>
-  <div class="drawer-nav-item" id="dnav-annual" onclick="drawerNav('annual')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/></svg>
-    年度
-  </div>
-  <div class="drawer-nav-item" id="dnav-recurring" onclick="drawerNav('recurring')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-    週期帳
-  </div>
+
   <div class="drawer-nav-item" id="dnav-settings" onclick="drawerNav('settings')" style="margin-top:auto">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
     設定
@@ -1213,6 +1245,9 @@ function showPage(name, el, isMobile) {
 function toggleSidebarGroup(id) {
   document.getElementById(id).classList.toggle('open');
 }
+function toggleDrawerGroup(id) {
+  document.getElementById(id).classList.toggle('open');
+}
 // ═══════════════════════════
 const MONTHS = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
 const MONTH_NAMES_FULL = ['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
@@ -1326,10 +1361,14 @@ function renderDayView() {
   const title = document.getElementById('list-section-title');
   if (dateStr) {
     const d = new Date(dateStr);
-    // sync the month label in header to reflect selected date
-    currentMonth = d.getMonth();
-    currentYear  = d.getFullYear();
-    updateMonthLabel();
+    // Only sync month/year from day-picker when we're actually on the dashboard
+    // (prevents overwriting the user's selected month when they're on the charts page)
+    const dashActive = document.getElementById('page-dashboard').classList.contains('active');
+    if (dashActive) {
+      currentMonth = d.getMonth();
+      currentYear  = d.getFullYear();
+      updateMonthLabel();
+    }
     if (title) title.textContent = `${d.getMonth()+1} 月 ${d.getDate()} 日 的明細`;
   }
 
