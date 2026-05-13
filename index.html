@@ -233,6 +233,29 @@
   ::-webkit-scrollbar { width: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  /* ── Theme picker ── */
+  .theme-cat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; padding: 4px 0 8px; }
+  .theme-cat-card { background: var(--surface); border: 1.5px solid var(--border); border-radius: 14px; padding: 14px 10px 12px; cursor: pointer; transition: .15s; text-align: center; }
+  .theme-cat-card:hover { border-color: var(--border2); background: var(--surface2); }
+  .theme-cat-card .tc-preview { display: flex; justify-content: center; gap: 3px; margin-bottom: 8px; }
+  .theme-cat-card .tc-dot { width: 12px; height: 12px; border-radius: 50%; }
+  .theme-cat-card .tc-name { font-size: .78rem; font-weight: 600; color: var(--text2); }
+  .theme-cat-card .tc-count { font-size: .65rem; color: var(--text3); margin-top: 2px; }
+
+  .theme-panel { display: none; }
+  .theme-panel.open { display: block; }
+  .theme-panel-back { display: flex; align-items: center; gap: 6px; font-size: .82rem; color: var(--text2); font-weight: 600; cursor: pointer; margin-bottom: 12px; padding: 4px 0; }
+  .theme-panel-back:hover { color: var(--text); }
+  .theme-panel-title { font-size: .9rem; font-weight: 600; color: var(--text); margin-bottom: 12px; }
+  .theme-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .theme-card { border-radius: 12px; padding: 12px 10px 10px; cursor: pointer; border: 2px solid transparent; transition: .15s; position: relative; }
+  .theme-card.active { border-color: var(--accent); }
+  .theme-card .th-swatches { display: flex; gap: 4px; margin-bottom: 8px; }
+  .theme-card .th-swatch { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+  .theme-card .th-name { font-size: .68rem; font-weight: 600; }
+  .theme-card .th-check { position: absolute; top: 6px; right: 6px; font-size: .7rem; display: none; }
+  .theme-card.active .th-check { display: block; }
   
   .settings-section { margin-bottom: 24px; }
   .settings-section h3 { font-size: .78rem; color: var(--text3); text-transform: uppercase; letter-spacing: .08em; font-weight: 600; margin-bottom: 10px; }
@@ -380,13 +403,13 @@
         <!-- ── View mode toggle ── -->
         <div class="view-mode-bar">
           <div class="view-mode-toggle">
-            <button class="vm-btn active" id="vm-month" onclick="setViewMode('month')">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-              月
-            </button>
-            <button class="vm-btn" id="vm-day" onclick="setViewMode('day')">
+            <button class="vm-btn active" id="vm-day" onclick="setViewMode('day')">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
               日
+            </button>
+            <button class="vm-btn" id="vm-month" onclick="setViewMode('month')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              月
             </button>
             <button class="vm-btn" id="vm-calendar" onclick="setViewMode('calendar')">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><rect x="8" y="14" width="3" height="3" rx="0.5" fill="currentColor" stroke="none"/><rect x="13" y="14" width="3" height="3" rx="0.5" fill="currentColor" stroke="none"/></svg>
@@ -544,6 +567,20 @@
           <div class="settings-item" onclick="toggleSetting('notif')">
             <div><div class="label">超支通知</div><div class="sublabel">預算達 80% 時提醒</div></div>
             <div class="toggle" id="toggle-notif"></div>
+          </div>
+        </div>
+        <div class="settings-section">
+          <h3>主題配色</h3>
+          <div id="theme-cat-view">
+            <div class="theme-cat-grid" id="theme-cat-grid"></div>
+          </div>
+          <div id="theme-detail-view" class="theme-panel">
+            <div class="theme-panel-back" onclick="showThemeCats()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><polyline points="15 18 9 12 15 6"/></svg>
+              返回分類
+            </div>
+            <div class="theme-panel-title" id="theme-panel-title"></div>
+            <div class="theme-grid" id="theme-grid"></div>
           </div>
         </div>
         <div class="settings-section">
@@ -975,7 +1012,7 @@ function changeMonth(d) {
 // ═══════════════════════════
 // VIEW MODE
 // ═══════════════════════════
-let viewMode = 'month'; // 'month' | 'day' | 'calendar'
+let viewMode = 'day'; // 'month' | 'day' | 'calendar'
 let calSelectedDate = null; // 'YYYY-MM-DD' string
 
 function setViewMode(mode) {
@@ -1776,12 +1813,240 @@ function applyInvoice() {
   showToast('📋 已套用發票號碼');
 }
 
+
+// ═══════════════════════════
+// THEMES
+// ═══════════════════════════
+const THEME_CATS = [
+  {
+    id: 'dark',
+    name: '深色系',
+    desc: '沉穩護眼',
+    dots: ['#1a1a2e', '#7c6aff', '#34d399'],
+  },
+  {
+    id: 'morandi',
+    name: '莫蘭迪',
+    desc: '低飽和優雅',
+    dots: ['#c4b5a5', '#9eadb8', '#b8a9c9'],
+  },
+  {
+    id: 'fresh',
+    name: '清新系',
+    desc: '明亮舒適',
+    dots: ['#e8f5e9', '#42a5f5', '#66bb6a'],
+  },
+];
+
+const THEMES = [
+  // ── 深色系 ──
+  {
+    id: 'midnight', cat: 'dark', name: '午夜紫',
+    bg: '#0f0f13', surface: '#17171f', surface2: '#1e1e28', surface3: '#252535',
+    accent: '#7c6aff', accent2: '#a090ff', border: 'rgba(255,255,255,0.08)', border2: 'rgba(255,255,255,0.14)',
+    text: '#f0f0f5', text2: '#a0a0b8', text3: '#606075',
+    swatches: ['#0f0f13','#7c6aff','#a090ff']
+  },
+  {
+    id: 'ocean', cat: 'dark', name: '深海藍',
+    bg: '#0a0f1e', surface: '#0f1929', surface2: '#162238', surface3: '#1d2d47',
+    accent: '#3b82f6', accent2: '#60a5fa', border: 'rgba(255,255,255,0.08)', border2: 'rgba(255,255,255,0.14)',
+    text: '#e8f0fe', text2: '#8aa8d0', text3: '#4a6580',
+    swatches: ['#0a0f1e','#3b82f6','#60a5fa']
+  },
+  {
+    id: 'forest', cat: 'dark', name: '森林綠',
+    bg: '#0a130e', surface: '#0f1f14', surface2: '#162a1c', surface3: '#1d3524',
+    accent: '#22c55e', accent2: '#4ade80', border: 'rgba(255,255,255,0.08)', border2: 'rgba(255,255,255,0.14)',
+    text: '#e8faf0', text2: '#7ab890', text3: '#3d6b4f',
+    swatches: ['#0a130e','#22c55e','#4ade80']
+  },
+  {
+    id: 'rose', cat: 'dark', name: '玫瑰紅',
+    bg: '#130a0f', surface: '#1f0f17', surface2: '#2a1620', surface3: '#351d29',
+    accent: '#ec4899', accent2: '#f472b6', border: 'rgba(255,255,255,0.08)', border2: 'rgba(255,255,255,0.14)',
+    text: '#faeef4', text2: '#c07898', text3: '#6b3d52',
+    swatches: ['#130a0f','#ec4899','#f472b6']
+  },
+  {
+    id: 'sunset', cat: 'dark', name: '日落橘',
+    bg: '#130d08', surface: '#1f150e', surface2: '#2a1c14', surface3: '#35231a',
+    accent: '#f97316', accent2: '#fb923c', border: 'rgba(255,255,255,0.08)', border2: 'rgba(255,255,255,0.14)',
+    text: '#faf0e8', text2: '#c09070', text3: '#6b4e35',
+    swatches: ['#130d08','#f97316','#fb923c']
+  },
+  {
+    id: 'amoled', cat: 'dark', name: '純黑 AMOLED',
+    bg: '#000000', surface: '#0a0a0a', surface2: '#111111', surface3: '#1a1a1a',
+    accent: '#bb86fc', accent2: '#d4b0ff', border: 'rgba(255,255,255,0.06)', border2: 'rgba(255,255,255,0.12)',
+    text: '#ffffff', text2: '#bbbbbb', text3: '#666666',
+    swatches: ['#000000','#bb86fc','#d4b0ff']
+  },
+  // ── 莫蘭迪 ──
+  {
+    id: 'morandi-rose', cat: 'morandi', name: '藕粉',
+    bg: '#2e2426', surface: '#3a2e30', surface2: '#453840', surface3: '#504248',
+    accent: '#c4a0a8', accent2: '#d4b5bc', border: 'rgba(255,255,255,0.08)', border2: 'rgba(255,255,255,0.13)',
+    text: '#f0e8ea', text2: '#c4b0b4', text3: '#7a6568',
+    swatches: ['#2e2426','#c4a0a8','#d4b5bc']
+  },
+  {
+    id: 'morandi-blue', cat: 'morandi', name: '霧藍',
+    bg: '#1e2530', surface: '#26303e', surface2: '#2e3a4a', surface3: '#364454',
+    accent: '#7a9ab8', accent2: '#9eadb8', border: 'rgba(255,255,255,0.08)', border2: 'rgba(255,255,255,0.13)',
+    text: '#e8eef4', text2: '#8fa8c0', text3: '#4a6070',
+    swatches: ['#1e2530','#7a9ab8','#9eadb8']
+  },
+  {
+    id: 'morandi-sage', cat: 'morandi', name: '鼠尾草',
+    bg: '#202820', surface: '#2a342a', surface2: '#323e32', surface3: '#3a483a',
+    accent: '#8aaa8a', accent2: '#a8bea8', border: 'rgba(255,255,255,0.08)', border2: 'rgba(255,255,255,0.13)',
+    text: '#e8f0e8', text2: '#90a890', text3: '#506050',
+    swatches: ['#202820','#8aaa8a','#a8bea8']
+  },
+  {
+    id: 'morandi-lavender', cat: 'morandi', name: '薰衣草',
+    bg: '#252230', surface: '#302c3e', surface2: '#3a364a', surface3: '#443f55',
+    accent: '#b8a9c9', accent2: '#ccc0db', border: 'rgba(255,255,255,0.08)', border2: 'rgba(255,255,255,0.13)',
+    text: '#ede8f4', text2: '#b0a4c4', text3: '#686078',
+    swatches: ['#252230','#b8a9c9','#ccc0db']
+  },
+  {
+    id: 'morandi-clay', cat: 'morandi', name: '陶土',
+    bg: '#2a2218', surface: '#352c20', surface2: '#403628', surface3: '#4a3f30',
+    accent: '#c4a882', accent2: '#d4bc9e', border: 'rgba(255,255,255,0.08)', border2: 'rgba(255,255,255,0.13)',
+    text: '#f0e8d8', text2: '#c0a880', text3: '#706048',
+    swatches: ['#2a2218','#c4a882','#d4bc9e']
+  },
+  {
+    id: 'morandi-light', cat: 'morandi', name: '米白',
+    bg: '#f4f0ec', surface: '#faf7f4', surface2: '#eeeae4', surface3: '#e4dfd8',
+    accent: '#9a8c7e', accent2: '#7a6e62', border: 'rgba(0,0,0,0.08)', border2: 'rgba(0,0,0,0.14)',
+    text: '#2a2420', text2: '#6a5e54', text3: '#9a8e84',
+    swatches: ['#f4f0ec','#9a8c7e','#7a6e62']
+  },
+  // ── 清新系 ──
+  {
+    id: 'fresh-mint', cat: 'fresh', name: '薄荷綠',
+    bg: '#f0faf4', surface: '#ffffff', surface2: '#e8f8ee', surface3: '#d8f2e0',
+    accent: '#10b981', accent2: '#059669', border: 'rgba(0,0,0,0.07)', border2: 'rgba(0,0,0,0.12)',
+    text: '#0f2d1e', text2: '#3a6b50', text3: '#7aaa8a',
+    swatches: ['#f0faf4','#10b981','#059669']
+  },
+  {
+    id: 'fresh-sky', cat: 'fresh', name: '晴空藍',
+    bg: '#f0f8ff', surface: '#ffffff', surface2: '#e4f2ff', surface3: '#d4eaff',
+    accent: '#3b9eff', accent2: '#1a7fdb', border: 'rgba(0,0,0,0.07)', border2: 'rgba(0,0,0,0.12)',
+    text: '#0d2040', text2: '#2a5a88', text3: '#6a9ac0',
+    swatches: ['#f0f8ff','#3b9eff','#1a7fdb']
+  },
+  {
+    id: 'fresh-peach', cat: 'fresh', name: '蜜桃橘',
+    bg: '#fff8f4', surface: '#ffffff', surface2: '#fff0e8', surface3: '#ffe4d4',
+    accent: '#f97316', accent2: '#ea6910', border: 'rgba(0,0,0,0.07)', border2: 'rgba(0,0,0,0.12)',
+    text: '#2a1408', text2: '#7a4030', text3: '#b07858',
+    swatches: ['#fff8f4','#f97316','#ea6910']
+  },
+  {
+    id: 'fresh-lavender', cat: 'fresh', name: '淡紫夢',
+    bg: '#f8f4ff', surface: '#ffffff', surface2: '#f0e8ff', surface3: '#e4d8ff',
+    accent: '#8b5cf6', accent2: '#7c3aed', border: 'rgba(0,0,0,0.07)', border2: 'rgba(0,0,0,0.12)',
+    text: '#1e0a40', text2: '#5a3a88', text3: '#9a78c0',
+    swatches: ['#f8f4ff','#8b5cf6','#7c3aed']
+  },
+  {
+    id: 'fresh-rose', cat: 'fresh', name: '芍藥粉',
+    bg: '#fff4f7', surface: '#ffffff', surface2: '#ffe8ee', surface3: '#ffd8e4',
+    accent: '#e91e8c', accent2: '#c4166e', border: 'rgba(0,0,0,0.07)', border2: 'rgba(0,0,0,0.12)',
+    text: '#2a0818', text2: '#7a2848', text3: '#b06888',
+    swatches: ['#fff4f7','#e91e8c','#c4166e']
+  },
+  {
+    id: 'fresh-lemon', cat: 'fresh', name: '檸檬黃',
+    bg: '#fffdf0', surface: '#ffffff', surface2: '#fffbe0', surface3: '#fff6c8',
+    accent: '#ca8a04', accent2: '#a36804', border: 'rgba(0,0,0,0.07)', border2: 'rgba(0,0,0,0.12)',
+    text: '#1e1600', text2: '#6a5000', text3: '#a08840',
+    swatches: ['#fffdf0','#ca8a04','#a36804']
+  },
+];
+
+let currentTheme = DB.get('theme') || 'midnight';
+let openThemeCat = null;
+
+function showThemeCats() {
+  openThemeCat = null;
+  document.getElementById('theme-cat-view').style.display = 'block';
+  document.getElementById('theme-detail-view').classList.remove('open');
+  renderThemeCatGrid();
+}
+
+function showThemeDetail(catId) {
+  openThemeCat = catId;
+  const cat = THEME_CATS.find(c => c.id === catId);
+  document.getElementById('theme-cat-view').style.display = 'none';
+  document.getElementById('theme-detail-view').classList.add('open');
+  document.getElementById('theme-panel-title').textContent = cat ? cat.name : '';
+  renderThemeGrid(catId);
+}
+
+function renderThemeCatGrid() {
+  const grid = document.getElementById('theme-cat-grid');
+  if (!grid) return;
+  grid.innerHTML = THEME_CATS.map(cat => {
+    const catThemes = THEMES.filter(t => t.cat === cat.id);
+    const dots = cat.dots.map(c => `<div class="tc-dot" style="background:${c}"></div>`).join('');
+    const isActive = catThemes.some(t => t.id === currentTheme);
+    return `<div class="theme-cat-card${isActive ? ' active' : ''}" onclick="showThemeDetail('${cat.id}')" style="${isActive ? 'border-color:var(--accent)' : ''}">
+      <div class="tc-preview">${dots}</div>
+      <div class="tc-name">${cat.name}</div>
+      <div class="tc-count">${catThemes.length} 種配色</div>
+    </div>`;
+  }).join('');
+}
+
+function applyTheme(id) {
+  const t = THEMES.find(th => th.id === id) || THEMES[0];
+  const root = document.documentElement;
+  root.style.setProperty('--bg', t.bg);
+  root.style.setProperty('--surface', t.surface);
+  root.style.setProperty('--surface2', t.surface2);
+  root.style.setProperty('--surface3', t.surface3);
+  root.style.setProperty('--accent', t.accent);
+  root.style.setProperty('--accent2', t.accent2);
+  root.style.setProperty('--border', t.border);
+  root.style.setProperty('--border2', t.border2);
+  root.style.setProperty('--text', t.text);
+  root.style.setProperty('--text2', t.text2);
+  root.style.setProperty('--text3', t.text3);
+  currentTheme = id;
+  DB.set('theme', id);
+  if (openThemeCat) renderThemeGrid(openThemeCat);
+  else renderThemeCatGrid();
+}
+
+function renderThemeGrid(catId) {
+  const grid = document.getElementById('theme-grid');
+  if (!grid) return;
+  const list = catId ? THEMES.filter(t => t.cat === catId) : THEMES;
+  grid.innerHTML = list.map(t => {
+    const active = t.id === currentTheme;
+    const swatches = t.swatches.map(c => `<div class="th-swatch" style="background:${c}"></div>`).join('');
+    return `<div class="theme-card${active ? ' active' : ''}" style="background:${t.surface};border-color:${active ? t.accent : 'transparent'}" onclick="applyTheme('${t.id}')">
+      <div class="th-swatches">${swatches}</div>
+      <div class="th-name" style="color:${active ? t.accent2 : t.text2}">${t.name}</div>
+      <div class="th-check" style="color:${t.accent2}">✓</div>
+    </div>`;
+  }).join('');
+}
+
+
 // ═══════════════════════════
 // SETTINGS
 // ═══════════════════════════
 function loadSettings() {
   document.getElementById('currency-select').value = settings.currency || 'TWD';
   document.getElementById('toggle-notif').className = 'toggle' + (settings.notif?' on':'');
+  showThemeCats();
 }
 function saveSetting(key,val) { settings[key]=val; save(); }
 function toggleSetting(key)   { settings[key]=!settings[key]; save(); loadSettings(); }
@@ -1816,6 +2081,15 @@ document.querySelectorAll('.modal-overlay').forEach(el=>{
   updateMonthLabel();
   buildCatGrid();
   buildCatGrid('rec');
+  // set up day mode UI state before first render
+  applyTheme(currentTheme);
+  document.getElementById('day-picker-wrap').style.display = 'block';
+  document.getElementById('calendar-wrap').style.display = 'none';
+  document.getElementById('list-wrap').style.display = 'block';
+  const dp = document.getElementById('day-picker');
+  if (!dp.value) dp.value = localDateStr(new Date());
+  const monthNavEl = document.querySelector('#page-dashboard .month-nav');
+  if (monthNavEl) monthNavEl.style.visibility = 'hidden';
   renderAll();
   renderAccounts();
   renderBudget();
