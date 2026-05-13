@@ -536,6 +536,87 @@
   .goal-emoji-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:6px; }
   .goal-emoji-btn { background:var(--surface2); border:1.5px solid var(--border); border-radius:8px; padding:6px; font-size:1.3rem; cursor:pointer; text-align:center; transition:.15s; }
   .goal-emoji-btn.selected { border-color:var(--accent); background:rgba(124,106,255,.15); }
+
+  /* ═══ ACHIEVEMENT PAGE ═══ */
+  .xp-hero {
+    background: linear-gradient(135deg, #1a1730 0%, #1e1e2e 100%);
+    border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 20px 18px; margin-bottom: 16px; position: relative; overflow: hidden;
+  }
+  .xp-hero::before {
+    content: ''; position: absolute; top: -40px; right: -40px;
+    width: 140px; height: 140px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(124,106,255,.18) 0%, transparent 70%);
+  }
+  .xp-hero-top { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+  .xp-avatar {
+    width: 52px; height: 52px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--teal));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem; flex-shrink: 0; position: relative;
+    box-shadow: 0 0 0 3px rgba(124,106,255,.3);
+  }
+  .xp-avatar-badge {
+    position: absolute; bottom: -2px; right: -2px;
+    background: var(--yellow); color: #000; border-radius: 50%;
+    width: 20px; height: 20px; font-size: .62rem; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid var(--bg);
+  }
+  .xp-level-info { flex: 1; min-width: 0; }
+  .xp-level-label { font-size: .68rem; color: var(--text3); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 2px; }
+  .xp-level-name { font-family: 'DM Serif Display'; font-size: 1.15rem; color: var(--text); margin-bottom: 1px; }
+  .xp-level-num { font-size: .75rem; color: var(--accent2); font-weight: 600; }
+  .xp-stats-row { display: flex; gap: 10px; margin-bottom: 12px; }
+  .xp-stat { flex: 1; background: rgba(255,255,255,.04); border-radius: 10px; padding: 8px 10px; text-align: center; }
+  .xp-stat .xs-v { font-size: .95rem; font-weight: 700; color: var(--text); }
+  .xp-stat .xs-l { font-size: .6rem; color: var(--text3); text-transform: uppercase; letter-spacing: .05em; margin-top: 2px; }
+  .xp-bar-wrap { height: 10px; background: rgba(255,255,255,.08); border-radius: 5px; overflow: hidden; margin-bottom: 6px; }
+  .xp-bar-fill { height: 100%; border-radius: 5px; background: linear-gradient(90deg, var(--accent), var(--teal)); transition: width .8s cubic-bezier(.4,0,.2,1); }
+  .xp-bar-label { display: flex; justify-content: space-between; font-size: .68rem; color: var(--text3); }
+  .xp-bar-label span:last-child { color: var(--accent2); font-weight: 600; }
+
+  .ach-tabs { display: flex; gap: 6px; margin-bottom: 16px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+  .ach-tabs::-webkit-scrollbar { display: none; }
+  .ach-tab { flex-shrink: 0; padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface); color: var(--text3); font-size: .78rem; font-weight: 600; cursor: pointer; transition: .15s; white-space: nowrap; font-family: 'DM Sans'; }
+  .ach-tab:hover { border-color: var(--border2); color: var(--text); }
+  .ach-tab.active { background: rgba(124,106,255,.18); border-color: rgba(124,106,255,.5); color: var(--accent2); }
+
+  .ach-list { display: flex; flex-direction: column; gap: 8px; }
+  .ach-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 14px; display: flex; align-items: center; gap: 12px;
+    transition: .15s; position: relative; overflow: hidden;
+  }
+  .ach-card.unlocked { border-color: rgba(124,106,255,.35); }
+  .ach-card.unlocked::before { content:''; position:absolute; top:0; left:0; bottom:0; width:3px; background:var(--accent); border-radius:3px 0 0 3px; }
+  .ach-card.claimed { border-color: rgba(52,211,153,.3); }
+  .ach-card.claimed::before { content:''; position:absolute; top:0; left:0; bottom:0; width:3px; background:var(--green); border-radius:3px 0 0 3px; }
+  .ach-icon-wrap { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0; background: var(--surface2); position: relative; }
+  .ach-card.locked .ach-icon-wrap { filter: grayscale(1); opacity: .4; }
+  .ach-check { position: absolute; top: -4px; right: -4px; width: 16px; height: 16px; border-radius: 50%; background: var(--green); display: flex; align-items: center; justify-content: center; font-size: .55rem; color: #fff; font-weight: 800; }
+  .ach-info { flex: 1; min-width: 0; }
+  .ach-name { font-size: .88rem; font-weight: 600; margin-bottom: 2px; }
+  .ach-card.locked .ach-name { color: var(--text3); }
+  .ach-desc { font-size: .72rem; color: var(--text3); margin-bottom: 5px; }
+  .ach-progress-row { display: flex; align-items: center; gap: 8px; }
+  .ach-pbar { flex: 1; height: 4px; background: var(--surface3); border-radius: 2px; overflow: hidden; }
+  .ach-pbar-fill { height: 100%; border-radius: 2px; background: var(--accent); transition: width .6s ease; }
+  .ach-card.claimed .ach-pbar-fill { background: var(--green); }
+  .ach-pct { font-size: .65rem; color: var(--text3); font-weight: 600; flex-shrink: 0; }
+  .ach-xp-tag { flex-shrink: 0; background: rgba(251,191,36,.12); color: var(--yellow); border-radius: 6px; padding: 3px 8px; font-size: .68rem; font-weight: 700; white-space: nowrap; }
+  .ach-card.claimed .ach-xp-tag { background: rgba(52,211,153,.12); color: var(--green); }
+  .ach-claim-btn { flex-shrink: 0; background: rgba(124,106,255,.2); border: 1px solid rgba(124,106,255,.4); color: var(--accent2); border-radius: 8px; padding: 5px 12px; font-size: .75rem; font-weight: 700; cursor: pointer; font-family: 'DM Sans'; transition: .15s; white-space: nowrap; }
+  .ach-claim-btn:hover { background: rgba(124,106,255,.35); }
+
+  .lvlup-toast {
+    position: fixed; top: 80px; left: 50%; transform: translateX(-50%) translateY(-20px);
+    background: linear-gradient(135deg, var(--accent), var(--teal));
+    color: #fff; border-radius: 14px; padding: 12px 22px; font-size: .9rem; font-weight: 700;
+    white-space: nowrap; opacity: 0; transition: all .4s; z-index: 400; pointer-events: none;
+    box-shadow: 0 8px 32px rgba(124,106,255,.5);
+  }
+  .lvlup-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 </style>
 </head>
 <body>
@@ -595,7 +676,11 @@
       </div>
     </div>
 
-    <div class="sidebar-nav-item" onclick="showPage('settings',this)" style="margin-top:auto">
+    <div class="sidebar-nav-item" onclick="showPage('achievements',this)" style="margin-top:auto">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      成就獎勵
+    </div>
+    <div class="sidebar-nav-item" onclick="showPage('settings',this)" style="margin-top:8px">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       設定
     </div>
@@ -877,6 +962,59 @@
       </div>
     </div>
 
+    <!-- ACHIEVEMENTS -->
+    <div class="page" id="page-achievements">
+      <div class="top-bar" style="padding-bottom:16px">
+        <div class="hamburger" onclick="openDrawer()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </div>
+        <h2>成就獎勵</h2>
+      </div>
+      <div class="inner-content">
+        <!-- XP Hero Card -->
+        <div class="xp-hero">
+          <div class="xp-hero-top">
+            <div class="xp-avatar" id="ach-avatar">
+              <span id="ach-avatar-emoji">🌱</span>
+              <div class="xp-avatar-badge" id="ach-level-badge">1</div>
+            </div>
+            <div class="xp-level-info">
+              <div class="xp-level-label">當前等級</div>
+              <div class="xp-level-name" id="ach-level-name">新手理財人</div>
+              <div class="xp-level-num" id="ach-level-num">Lv.1</div>
+            </div>
+          </div>
+          <div class="xp-stats-row">
+            <div class="xp-stat">
+              <div class="xs-v" id="ach-total-xp">0</div>
+              <div class="xs-l">總經驗值</div>
+            </div>
+            <div class="xp-stat">
+              <div class="xs-v" id="ach-claimed-count">0</div>
+              <div class="xs-l">已完成</div>
+            </div>
+            <div class="xp-stat">
+              <div class="xs-v" id="ach-total-count">0</div>
+              <div class="xs-l">任務總數</div>
+            </div>
+          </div>
+          <div class="xp-bar-wrap">
+            <div class="xp-bar-fill" id="ach-xp-bar" style="width:0%"></div>
+          </div>
+          <div class="xp-bar-label">
+            <span id="ach-xp-cur">0 XP</span>
+            <span id="ach-xp-next">升級還需 100 XP</span>
+          </div>
+        </div>
+
+        <!-- Category Tabs -->
+        <div class="ach-tabs" id="ach-tabs"></div>
+
+        <!-- Achievement List -->
+        <div class="ach-list" id="ach-list"></div>
+      </div>
+    </div>
+
     <!-- SETTINGS -->
     <div class="page" id="page-settings">
       <div class="top-bar" style="padding-bottom:16px">
@@ -973,6 +1111,7 @@
     </div>
   </nav>
 
+  <div id="lvlup-toast" class="lvlup-toast"></div>
 </div><!-- /app -->
 
 <!-- ── Mobile Drawer ── -->
@@ -1029,7 +1168,11 @@
     </div>
   </div>
 
-  <div class="drawer-nav-item" id="dnav-settings" onclick="drawerNav('settings')" style="margin-top:auto">
+  <div class="drawer-nav-item" id="dnav-achievements" onclick="drawerNav('achievements')" style="margin-top:auto">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+    成就獎勵
+  </div>
+  <div class="drawer-nav-item" id="dnav-settings" onclick="drawerNav('settings')" style="margin-top:8px">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
     設定
   </div>
@@ -1430,6 +1573,7 @@ function drawerNav(name) {
   if (name === 'settings')  loadSettings();
   if (name === 'annual')    renderAnnual();
   if (name === 'goals')     renderGoals();
+  if (name === 'achievements') renderAchievements();
 }
 
 // ═══════════════════════════
@@ -1455,6 +1599,7 @@ function showPage(name, el, isMobile) {
   if (name === 'settings')  loadSettings();
   if (name === 'annual')    renderAnnual();
   if (name === 'goals')     renderGoals();
+  if (name === 'achievements') renderAchievements();
 }
 
 function toggleSidebarGroup(id) {
@@ -3175,6 +3320,250 @@ function showToast(msg) {
   t.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(()=>t.classList.remove('show'), 2800);
+}
+
+// ═══════════════════════════
+// CLOSE ON OVERLAY CLICK
+// ═══════════════════════════
+document.querySelectorAll('.modal-overlay').forEach(el=>{
+  el.addEventListener('click', e=>{ if(e.target===el) el.classList.remove('open'); });
+});
+
+// ═══════════════════════════════════════════════════════
+// ACHIEVEMENT SYSTEM
+// ═══════════════════════════════════════════════════════
+
+const LEVEL_THRESHOLDS = [0, 100, 250, 450, 700, 1000, 1400, 1900, 2500, 3200, 4000];
+const LEVEL_NAMES = [
+  '新手理財人','初級記帳師','穩健管家','理財達人',
+  '節流高手','預算大師','財務規劃師','財富守護者','金融智者','理財宗師'
+];
+const LEVEL_AVATARS = ['🌱','💰','📊','🎯','💎','🏆','🌟','👑','🦅','⚡'];
+
+// Achievement definitions  
+const ACH_DEFS = [
+  // 記帳入門
+  { id:'tx_first',    cat:'記帳入門', icon:'✏️',  name:'第一筆記錄',   desc:'新增你的第一筆交易',         xp:30,  check: s => s.txCount >= 1 },
+  { id:'tx_10',       cat:'記帳入門', icon:'📝',  name:'記帳新兵',     desc:'累計記錄 10 筆交易',          xp:50,  check: s => s.txCount >= 10 },
+  { id:'tx_50',       cat:'記帳入門', icon:'📒',  name:'記帳老手',     desc:'累計記錄 50 筆交易',          xp:100, check: s => s.txCount >= 50 },
+  { id:'tx_100',      cat:'記帳入門', icon:'📚',  name:'百筆達人',     desc:'累計記錄 100 筆交易',         xp:200, check: s => s.txCount >= 100 },
+  { id:'note_first',  cat:'記帳入門', icon:'💬',  name:'備注控',       desc:'替一筆交易加上備注',          xp:20,  check: s => s.hasNote },
+  { id:'multi_cat',   cat:'記帳入門', icon:'🗂️', name:'分類大師',     desc:'使用超過 5 種不同支出分類',   xp:60,  check: s => s.catCount >= 5 },
+
+  // 收支管理
+  { id:'income_first',  cat:'收支管理', icon:'💵', name:'第一筆收入',   desc:'記錄第一筆收入',             xp:30,  check: s => s.incomeCount >= 1 },
+  { id:'save_month',    cat:'收支管理', icon:'🟢', name:'月度盈餘',     desc:'當月收入大於支出',           xp:80,  check: s => s.monthBalance > 0 },
+  { id:'save_3month',   cat:'收支管理', icon:'📈', name:'連續盈餘',     desc:'連續 3 個月收入大於支出',    xp:150, check: s => s.posMonths >= 3 },
+  { id:'zero_expense',  cat:'收支管理', icon:'🧊', name:'零支出日',     desc:'某天完全沒有支出',           xp:40,  check: s => s.hasZeroExpDay },
+  { id:'big_income',    cat:'收支管理', icon:'💸', name:'大額收入',     desc:'單筆收入超過 10,000',        xp:60,  check: s => s.maxIncome >= 10000 },
+
+  // 帳戶管理
+  { id:'acc_first',   cat:'帳戶管理', icon:'🏦', name:'開戶啟程',     desc:'新增第一個帳戶',              xp:40,  check: s => s.accCount >= 1 },
+  { id:'acc_3',       cat:'帳戶管理', icon:'💳', name:'多帳戶玩家',   desc:'同時擁有 3 個以上帳戶',       xp:80,  check: s => s.accCount >= 3 },
+  { id:'transfer',    cat:'帳戶管理', icon:'🔄', name:'帳戶轉帳',     desc:'完成第一次帳戶轉帳',          xp:50,  check: s => s.transferCount >= 1 },
+  { id:'acc_positive',cat:'帳戶管理', icon:'✅', name:'帳戶正餘額',   desc:'所有帳戶都保持正餘額',        xp:100, check: s => s.allAccPositive },
+
+  // 預算規劃
+  { id:'budget_first',cat:'預算規劃', icon:'🎯', name:'預算啟動',     desc:'設定第一個預算',              xp:50,  check: s => s.budgetCount >= 1 },
+  { id:'budget_kept', cat:'預算規劃', icon:'🛡️', name:'預算守護者',   desc:'當月至少一項預算未超支',      xp:80,  check: s => s.budgetKept },
+  { id:'budget_all',  cat:'預算規劃', icon:'🏅', name:'全面控制',     desc:'當月所有預算都未超支',        xp:150, check: s => s.allBudgetsKept },
+  { id:'budget_3',    cat:'預算規劃', icon:'📋', name:'全方位規劃',   desc:'同時設定 3 個以上預算',       xp:80,  check: s => s.budgetCount >= 3 },
+
+  // 存錢目標
+  { id:'goal_first',  cat:'存錢目標', icon:'🌠', name:'夢想起點',     desc:'設定第一個存錢目標',          xp:50,  check: s => s.goalCount >= 1 },
+  { id:'goal_half',   cat:'存錢目標', icon:'⛽', name:'一半到達',     desc:'某個目標達到 50% 進度',       xp:80,  check: s => s.goalHalf },
+  { id:'goal_done',   cat:'存錢目標', icon:'🎉', name:'目標達成！',   desc:'完成第一個存錢目標',          xp:200, check: s => s.goalDone >= 1 },
+
+  // 週期帳
+  { id:'rec_first',   cat:'週期帳',   icon:'🔁', name:'固定支出',     desc:'設定第一筆週期帳',            xp:40,  check: s => s.recCount >= 1 },
+  { id:'rec_3',       cat:'週期帳',   icon:'📅', name:'週期達人',     desc:'設定 3 筆以上週期帳',         xp:80,  check: s => s.recCount >= 3 },
+];
+
+let achData = DB.get('achData') || { claimedIds: [], totalXp: 0 };
+let achActiveTab = '全部';
+
+function computeAchStats() {
+  const now = new Date();
+  const curY = now.getFullYear(), curM = now.getMonth();
+
+  const txCount = transactions.length;
+  const incomeCount = transactions.filter(t => t.type === 'income').length;
+  const transferCount = transactions.filter(t => t.type === 'transfer').length;
+  const hasNote = transactions.some(t => t.note && t.note.trim());
+  const maxIncome = Math.max(0, ...transactions.filter(t => t.type === 'income').map(t => t.amount));
+
+  // unique expense categories
+  const expCats = new Set(transactions.filter(t => t.type === 'expense').map(t => t.category));
+  const catCount = expCats.size;
+
+  // current month balance
+  const curMonthTx = transactions.filter(t => {
+    const d = new Date(t.date);
+    return d.getFullYear() === curY && d.getMonth() === curM;
+  });
+  const monthIncome = curMonthTx.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount, 0);
+  const monthExpense = curMonthTx.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount, 0);
+  const monthBalance = monthIncome - monthExpense;
+
+  // consecutive positive months
+  let posMonths = 0;
+  for (let i = 0; i < 6; i++) {
+    let d = new Date(curY, curM - i, 1);
+    let y = d.getFullYear(), m = d.getMonth();
+    let mTx = transactions.filter(t => { const td = new Date(t.date); return td.getFullYear()===y && td.getMonth()===m; });
+    let mInc = mTx.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+    let mExp = mTx.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+    if (mInc > mExp) posMonths++; else break;
+  }
+
+  // zero expense day
+  const expDays = new Set(transactions.filter(t=>t.type==='expense').map(t=>t.date));
+  const allDays = new Set(transactions.map(t=>t.date));
+  const hasZeroExpDay = [...allDays].some(d => !expDays.has(d));
+
+  // accounts
+  const accCount = accounts.length;
+  const allAccPositive = accounts.length > 0 && accounts.every(a => a.balance >= 0);
+
+  // budgets
+  const budgetCount = budgets.length;
+  let budgetKept = false, allBudgetsKept = false;
+  if (budgets.length > 0) {
+    const keptList = budgets.map(b => {
+      const spent = curMonthTx.filter(t=>t.type==='expense'&&t.category===b.category).reduce((s,t)=>s+t.amount,0);
+      return spent <= b.amount;
+    });
+    budgetKept = keptList.some(Boolean);
+    allBudgetsKept = keptList.every(Boolean);
+  }
+
+  // goals
+  const goalCount = goals.length;
+  const goalHalf = goals.some(g => g.target > 0 && (g.saved||0) / g.target >= 0.5);
+  const goalDone = goals.filter(g => g.target > 0 && (g.saved||0) >= g.target).length;
+
+  // recurring
+  const recCount = recurring.length;
+
+  return { txCount, incomeCount, transferCount, hasNote, maxIncome, catCount, monthBalance,
+           posMonths, hasZeroExpDay, accCount, allAccPositive, budgetCount, budgetKept,
+           allBudgetsKept, goalCount, goalHalf, goalDone, recCount };
+}
+
+function getLevelInfo(xp) {
+  let lv = 0;
+  for (let i = 1; i < LEVEL_THRESHOLDS.length; i++) {
+    if (xp >= LEVEL_THRESHOLDS[i]) lv = i;
+    else break;
+  }
+  const lvIdx = Math.min(lv, LEVEL_NAMES.length - 1);
+  const curFloor = LEVEL_THRESHOLDS[lv];
+  const nextFloor = LEVEL_THRESHOLDS[Math.min(lv + 1, LEVEL_THRESHOLDS.length - 1)];
+  const pct = lv >= LEVEL_THRESHOLDS.length - 1 ? 100
+    : Math.round((xp - curFloor) / (nextFloor - curFloor) * 100);
+  return { lv: lv + 1, name: LEVEL_NAMES[lvIdx], avatar: LEVEL_AVATARS[lvIdx], curFloor, nextFloor, pct, xp };
+}
+
+let lvlupTimer;
+function showLvlUpToast(msg) {
+  const t = document.getElementById('lvlup-toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(lvlupTimer);
+  lvlupTimer = setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+function claimAchievement(id) {
+  if (achData.claimedIds.includes(id)) return;
+  const def = ACH_DEFS.find(a => a.id === id);
+  if (!def) return;
+  const stats = computeAchStats();
+  if (!def.check(stats)) return;
+
+  const prevLv = getLevelInfo(achData.totalXp).lv;
+  achData.claimedIds.push(id);
+  achData.totalXp += def.xp;
+  DB.set('achData', achData);
+  const newLv = getLevelInfo(achData.totalXp).lv;
+
+  showToast(`🏆 成就達成：${def.name} +${def.xp} XP`);
+  if (newLv > prevLv) {
+    const info = getLevelInfo(achData.totalXp);
+    setTimeout(() => showLvlUpToast(`🎉 升級！你已達到 Lv.${info.lv} ${info.name}`), 600);
+  }
+  renderAchievements();
+}
+
+function renderAchievements() {
+  const stats = computeAchStats();
+  const info = getLevelInfo(achData.totalXp);
+  const claimed = achData.claimedIds;
+  const total = ACH_DEFS.length;
+  const claimedCount = claimed.length;
+
+  // Update hero
+  document.getElementById('ach-avatar-emoji').textContent = info.avatar;
+  document.getElementById('ach-level-badge').textContent = info.lv;
+  document.getElementById('ach-level-name').textContent = info.name;
+  document.getElementById('ach-level-num').textContent = `Lv.${info.lv}`;
+  document.getElementById('ach-total-xp').textContent = achData.totalXp;
+  document.getElementById('ach-claimed-count').textContent = claimedCount;
+  document.getElementById('ach-total-count').textContent = total;
+  document.getElementById('ach-xp-bar').style.width = info.pct + '%';
+  document.getElementById('ach-xp-cur').textContent = `${achData.totalXp} XP`;
+  const isMax = info.lv >= LEVEL_THRESHOLDS.length;
+  document.getElementById('ach-xp-next').textContent = isMax
+    ? '✨ 已達最高等級'
+    : `升級還需 ${info.nextFloor - achData.totalXp} XP`;
+
+  // Category tabs
+  const cats = ['全部', ...new Set(ACH_DEFS.map(a => a.cat))];
+  const tabsEl = document.getElementById('ach-tabs');
+  tabsEl.innerHTML = cats.map(c =>
+    `<button class="ach-tab${c === achActiveTab ? ' active' : ''}" onclick="setAchTab('${c}')">${c}</button>`
+  ).join('');
+
+  // Achievement list
+  const filtered = achActiveTab === '全部' ? ACH_DEFS : ACH_DEFS.filter(a => a.cat === achActiveTab);
+  const listEl = document.getElementById('ach-list');
+  listEl.innerHTML = filtered.map(def => {
+    const isClaimed = claimed.includes(def.id);
+    const isUnlocked = !isClaimed && def.check(stats);
+    const stateClass = isClaimed ? 'claimed' : isUnlocked ? 'unlocked' : 'locked';
+    const checkMark = isClaimed ? `<div class="ach-check">✓</div>` : '';
+    const xpTag = isClaimed
+      ? `<span class="ach-xp-tag">✓ ${def.xp} XP</span>`
+      : `<span class="ach-xp-tag">+${def.xp} XP</span>`;
+    const actionBtn = isUnlocked
+      ? `<button class="ach-claim-btn" onclick="claimAchievement('${def.id}')">領取</button>`
+      : '';
+    // simple progress: boolean or count-based
+    const prog = isClaimed ? 100 : isUnlocked ? 100 : 0;
+    const progLabel = isClaimed ? '已完成' : isUnlocked ? '可領取！' : '未達成';
+
+    return `
+      <div class="ach-card ${stateClass}">
+        <div class="ach-icon-wrap">
+          ${def.icon}
+          ${checkMark}
+        </div>
+        <div class="ach-info">
+          <div class="ach-name">${def.name}</div>
+          <div class="ach-desc">${def.desc}</div>
+          <div class="ach-progress-row">
+            <div class="ach-pbar"><div class="ach-pbar-fill" style="width:${prog}%"></div></div>
+            <span class="ach-pct">${progLabel}</span>
+          </div>
+        </div>
+        ${xpTag}
+        ${actionBtn}
+      </div>`;
+  }).join('');
+}
+
+function setAchTab(cat) {
+  achActiveTab = cat;
+  renderAchievements();
 }
 
 // ═══════════════════════════
