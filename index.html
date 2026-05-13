@@ -56,6 +56,18 @@
     .sidebar-nav-item:hover { background: var(--surface2); color: var(--text); }
     .sidebar-nav-item.active { background: var(--surface2); color: var(--accent2); border-left-color: var(--accent); }
     .sidebar-nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+    /* Grouped sidebar sections */
+    .sidebar-group { margin: 4px 0; }
+    .sidebar-group-header { display: flex; align-items: center; justify-content: space-between; padding: 8px 24px 6px; cursor: pointer; user-select: none; transition: .15s; }
+    .sidebar-group-header:hover .sg-label { color: var(--text2); }
+    .sg-label { font-size: .68rem; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: .1em; transition: .15s; }
+    .sg-chevron { color: var(--text3); transition: transform .2s; width: 12px; height: 12px; flex-shrink: 0; }
+    .sidebar-group.open .sg-chevron { transform: rotate(180deg); }
+    .sidebar-group-items { overflow: hidden; max-height: 0; transition: max-height .25s ease; }
+    .sidebar-group.open .sidebar-group-items { max-height: 200px; }
+    .sidebar-group .sidebar-nav-item { padding-left: 32px; font-size: .85rem; }
+
     .bottom-nav { display: none; }
     .main { flex: 1; min-width: 0; height: 100%; overflow-y: auto; overflow-x: hidden; padding-bottom: 0; }
     .page { max-width: 860px; margin: 0 auto; }
@@ -460,22 +472,43 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
       帳戶
     </div>
-    <div class="sidebar-nav-item" onclick="showPage('budget',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-      預算
+
+    <!-- 分析類別 -->
+    <div class="sidebar-group open" id="sg-analysis">
+      <div class="sidebar-group-header" onclick="toggleSidebarGroup('sg-analysis')">
+        <span class="sg-label">分析</span>
+        <svg class="sg-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="sidebar-group-items">
+        <div class="sidebar-nav-item" onclick="showPage('charts',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          報表
+        </div>
+        <div class="sidebar-nav-item" onclick="showPage('annual',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/></svg>
+          年度
+        </div>
+      </div>
     </div>
-    <div class="sidebar-nav-item" onclick="showPage('charts',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-      報表
+
+    <!-- 規劃類別 -->
+    <div class="sidebar-group open" id="sg-plan">
+      <div class="sidebar-group-header" onclick="toggleSidebarGroup('sg-plan')">
+        <span class="sg-label">規劃</span>
+        <svg class="sg-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="sidebar-group-items">
+        <div class="sidebar-nav-item" onclick="showPage('budget',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          預算
+        </div>
+        <div class="sidebar-nav-item" onclick="showPage('recurring',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+          週期帳
+        </div>
+      </div>
     </div>
-    <div class="sidebar-nav-item" onclick="showPage('annual',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/></svg>
-      年度
-    </div>
-    <div class="sidebar-nav-item" onclick="showPage('recurring',this)">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-      週期帳
-    </div>
+
     <div class="sidebar-nav-item" onclick="showPage('settings',this)" style="margin-top:auto">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       設定
@@ -1163,12 +1196,22 @@ function showPage(name, el, isMobile) {
   document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
   if (isMobile) { const ni = document.getElementById('nav-'+name); if (ni) ni.classList.add('active'); }
   else { if (el) el.classList.add('active'); }
+  // auto-expand the sidebar group that contains this page
+  const groupMap = { charts:'sg-analysis', annual:'sg-analysis', budget:'sg-plan', recurring:'sg-plan' };
+  if (groupMap[name]) {
+    const grp = document.getElementById(groupMap[name]);
+    if (grp && !grp.classList.contains('open')) grp.classList.add('open');
+  }
   if (name === 'dashboard' || name === 'charts') renderAll();
   if (name === 'accounts')  renderAccounts();
   if (name === 'budget')    renderBudget();
   if (name === 'recurring') renderRecurring();
   if (name === 'settings')  loadSettings();
   if (name === 'annual')    renderAnnual();
+}
+
+function toggleSidebarGroup(id) {
+  document.getElementById(id).classList.toggle('open');
 }
 // ═══════════════════════════
 const MONTHS = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
