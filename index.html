@@ -51,7 +51,7 @@
       width: 220px; min-width: 220px;
       background: var(--surface); border-right: 1px solid var(--border);
       height: 100vh; position: sticky; top: 0;
-      overflow: hidden;
+      overflow: hidden; z-index: 110;
     }
     .sidebar-logo { padding: 28px 24px 20px; flex-shrink: 0; border-bottom: 1px solid var(--border); }
     .sidebar-logo h1 { font-family: 'DM Serif Display'; font-size: 1.6rem; color: var(--text); }
@@ -79,7 +79,7 @@
     .sidebar-group.open .sidebar-group-items { max-height: 400px; }
     .sidebar-group .sidebar-nav-item { padding-left: 32px; font-size: .85rem; }
 
-    .bottom-nav { display: none; }
+    .bottom-nav { display: none !important; left: 220px; }
     .main { flex: 1; min-width: 0; height: 100%; overflow-y: auto; overflow-x: hidden; padding-bottom: 0; }
     .page { max-width: 860px; margin: 0 auto; }
     .top-bar { padding: 32px 32px 12px; position: static; background: transparent; }
