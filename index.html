@@ -1749,23 +1749,16 @@ async function pushToSupabase() {
     if (accounts.length)     ops.push(_sb.from('accounts').upsert(accounts.map(r=>({...r,user_id:uid_col})),{onConflict:'id'}));
     if (budgets.length)      ops.push(_sb.from('budgets').upsert(budgets.map(r=>({...r,user_id:uid_col})),{onConflict:'id'}));
     if (recurring.length)    ops.push(_sb.from('recurring').upsert(recurring.map(r=>({...r,user_id:uid_col})),{onConflict:'id'}));
-    if (goals.length)        ops.push(_sb.from('goals').upsert(goals.map(r=>({
-      id:        r.id,
-      user_id:   uid_col,
-      name:      r.name,
-      icon:      JSON.stringify({ emoji: r.emoji||'🎯', color: r.color||null, accountId: r.accountId||null, note: r.note||null }),
-      target:    r.target,
-      saved:     r.saved||0,
-      deadline:  r.deadline||null,
-    })),{onConflict:'id'}));
-    // meta row
+    if (goals.length)        ops.push(_sb.from('goals').upsert(goals.map(r=>({...r,user_id:uid_col})),{onConflict:'id'}));
+    // meta row — ✅ FIX: 加入 rec_applied 同步
+    const recApplied = DB.get('rec_applied') || {};
     ops.push(_sb.from('user_data').upsert({
-      user_id: uid_col,
-      settings: JSON.stringify(settings),
-      profile:  JSON.stringify(profile),
-      ach:      JSON.stringify(achData),
-      theme:    currentTheme,
-      rec_applied: JSON.stringify(DB.get('rec_applied') || {}),
+      user_id:     uid_col,
+      settings:    JSON.stringify(settings),
+      profile:     JSON.stringify(profile),
+      ach:         JSON.stringify(achData),
+      theme:       currentTheme,
+      rec_applied: JSON.stringify(recApplied),
     },{onConflict:'user_id'}));
     await Promise.all(ops);
     setSyncBadge('ok');
@@ -1795,16 +1788,12 @@ async function pullFromSupabase() {
   if (goalR.data) goals        = goalR.data.map(strip);
   if (metaR.data) {
     const m = metaR.data;
-    if (m.settings) try { settings = JSON.parse(m.settings); } catch {}
-    if (m.profile)  try { profile  = JSON.parse(m.profile);  } catch {}
-    if (m.ach)      try { achData  = JSON.parse(m.ach);      } catch {}
-    if (m.theme)    { currentTheme = m.theme; applyTheme(m.theme); }
-    // 同步 rec_applied（週期帳套用紀錄）
+    if (m.settings)    try { settings = JSON.parse(m.settings); } catch {}
+    if (m.profile)     try { profile  = JSON.parse(m.profile);  } catch {}
+    if (m.ach)         try { achData  = JSON.parse(m.ach);      } catch {}
+    if (m.theme)       { currentTheme = m.theme; applyTheme(m.theme); }
+    // ✅ FIX: 還原 rec_applied（週期帳套用紀錄）
     if (m.rec_applied) try { DB.set('rec_applied', JSON.parse(m.rec_applied)); } catch {}
-  }
-  // 確保 profile.email 與登入帳號同步
-  if (currentUser && currentUser.email && !profile.email) {
-    profile.email = currentUser.email;
   }
   // mirror to localStorage
   DB.set('txs',transactions); DB.set('accounts',accounts); DB.set('budgets',budgets);
@@ -1932,7 +1921,9 @@ async function onLoginSuccess(isNewAccount) {
     await pullFromSupabase();     // pull cloud → local
   }
   hideAuthOverlay();
-  updateAccountSection();
+  // ✅ FIX: 確保 profile 未設定 email 時，使用登入帳號的 email
+  if (!profile.email && currentUser) profile.email = currentUser.email;
+  updateAccountSection();        // 這裡會連帶呼叫 renderProfileCard & updateDashboardGreeting
   // re-render everything with fresh data
   applyRecurring();
   renderAll();
@@ -1942,7 +1933,6 @@ async function onLoginSuccess(isNewAccount) {
   renderGoals();
   renderAchievements();
   loadSettings();
-  updateDashboardGreeting();
   setSyncBadge('ok');
   showToast('✅ 雲端同步完成');
 }
@@ -1962,16 +1952,24 @@ function updateAccountSection() {
   const logoutEl  = document.getElementById('logout-section');
   const loginEl   = document.getElementById('login-prompt-section');
   if (currentUser) {
+    // 設定頁顯示登入 email（auth 帳號）
     if (emailEl)  emailEl.textContent = currentUser.email;
     if (logoutEl) logoutEl.style.display = '';
     if (loginEl)  loginEl.style.display  = 'none';
     setSyncBadge('ok');
+    // ✅ FIX: 如果 profile.email 尚未設定，預設填入登入 email
+    if (!profile.email) {
+      profile.email = currentUser.email;
+    }
   } else {
     if (emailEl)  emailEl.textContent = '離線模式';
     if (logoutEl) logoutEl.style.display = 'none';
     if (loginEl)  loginEl.style.display  = '';
     setSyncBadge('local');
   }
+  // ✅ FIX: 每次帳號狀態變更都重新渲染個人資料卡片與問候語
+  renderProfileCard();
+  updateDashboardGreeting();
 }
 
 // ── Bootstrap: check existing session ────────────────
@@ -1984,7 +1982,10 @@ function updateAccountSection() {
       applyRecurring();
       renderAll(); renderAccounts(); renderBudget();
       renderRecurring(); renderGoals(); renderAchievements();
-      loadSettings(); updateDashboardGreeting();
+      loadSettings();
+      // ✅ FIX: 資料拉取完成後，重新渲染個人資料（profile 已從 Supabase 更新）
+      updateAccountSection();
+      updateDashboardGreeting();
       setSyncBadge('ok');
     });
     hideAuthOverlay();
@@ -2695,15 +2696,14 @@ function renderBudget() {
   const txs  = getMonthTxs().filter(t=>t.type==='expense');
   if (!budgets.length) { list.innerHTML = '<div class="empty"><div class="icon">🎯</div><p>尚未設定預算</p></div>'; return; }
   list.innerHTML = budgets.map(b => {
-    const budgetLimit = b.limit || b.amount || 0;
     const spent = txs.filter(t=>t.cat===b.cat).reduce((s,t)=>s+t.amount,0);
-    const pct   = Math.min((spent/budgetLimit)*100, 100);
+    const pct   = Math.min((spent/b.limit)*100, 100);
     const color = pct>=90 ? 'var(--red)' : pct>=80 ? 'var(--yellow)' : 'var(--green)';
     const cat   = findCat(b.cat);
     return `<div class="budget-card">
       <div class="budget-head">
         <div class="budget-name">${cat?.emoji||'📦'} ${b.cat}</div>
-        <div class="budget-amounts">${fmt(spent)} / ${fmt(budgetLimit)}</div>
+        <div class="budget-amounts">${fmt(spent)} / ${fmt(b.limit)}</div>
       </div>
       <div class="budget-bar"><div class="budget-fill" style="width:${pct}%;background:${color}"></div></div>
       <div class="budget-pct">${pct.toFixed(0)}% 已使用</div>
@@ -2722,8 +2722,8 @@ function saveBudget() {
   const limit = parseFloat(document.getElementById('budget-limit').value);
   if (!limit) { showToast('請輸入預算金額'); return; }
   const idx = budgets.findIndex(b=>b.cat===cat);
-  if (idx>=0) { budgets[idx].amount = limit; budgets[idx].limit = limit; }
-  else budgets.push({ id:uid(), cat, amount: limit, limit });
+  if (idx>=0) budgets[idx].limit = limit;
+  else budgets.push({ id:uid(), cat, limit });
   save();
   closeModal('budgetModal');
   renderBudget();
@@ -2734,9 +2734,8 @@ function checkBudgetWarnings() {
   if (!settings.notif) return;
   const txs = getMonthTxs().filter(t=>t.type==='expense');
   budgets.forEach(b => {
-    const budgetLimit = b.limit || b.amount || 0;
     const spent = txs.filter(t=>t.cat===b.cat).reduce((s,t)=>s+t.amount,0);
-    const pct   = (spent/budgetLimit)*100;
+    const pct   = (spent/b.limit)*100;
     if (pct>=90 && pct<100) showToast(`⚠️ ${b.cat} 預算已達 ${pct.toFixed(0)}%`);
   });
 }
@@ -3780,9 +3779,7 @@ function updateDashboardGreeting() {
 function openProfileModal() {
   document.getElementById('profile-name').value     = profile.name     || '';
   document.getElementById('profile-birthday').value = profile.birthday || '';
-  // 優先使用已登入帳號的 email
-  const authEmail = currentUser ? currentUser.email : '';
-  document.getElementById('profile-email').value    = profile.email || authEmail || '';
+  document.getElementById('profile-email').value    = profile.email    || '';
   document.getElementById('profile-password').value = '';
   document.getElementById('profileModal').classList.add('open');
 }
