@@ -59,7 +59,8 @@
     .sidebar-logo span { color: var(--accent); }
     .sidebar-nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 24px; cursor: pointer; transition: all 0.15s; color: var(--text2); font-size: .9rem; font-weight: 500; border-left: 3px solid transparent; }
     .sidebar-nav-item:hover { background: var(--surface2); color: var(--text); }
-    .sidebar-nav-item.active { background: var(--surface2); color: var(--accent2); border-left-color: var(--accent); }
+    .sidebar-nav-item.active { background: var(--surface2); color: var(--accent); border-left-color: var(--accent); font-weight: 600; }
+    .sidebar-nav-item.active svg { color: var(--accent); }
     .sidebar-nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
 
     /* Grouped sidebar sections */
@@ -80,6 +81,7 @@
   }
   
   .main { flex: 1; overflow-y: auto; overflow-x: hidden; padding-bottom: calc(var(--bottom-h) + 16px); }
+  @media(min-width:860px) { .main { padding-bottom: 0; } }
   
   .top-bar { padding: 20px 20px 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; position: sticky; top: 0; z-index: 50; background: var(--bg); }
   .top-bar h2 { font-family: 'DM Serif Display'; font-size: 1.5rem; flex-shrink: 0; }
@@ -539,14 +541,15 @@
 
   /* ═══ ACHIEVEMENT PAGE ═══ */
   .xp-hero {
-    background: linear-gradient(135deg, #1a1730 0%, #1e1e2e 100%);
-    border: 1px solid var(--border); border-radius: var(--radius);
+    background: var(--surface2);
+    border: 1.5px solid var(--border2); border-radius: var(--radius);
     padding: 20px 18px; margin-bottom: 16px; position: relative; overflow: hidden;
   }
   .xp-hero::before {
     content: ''; position: absolute; top: -40px; right: -40px;
     width: 140px; height: 140px; border-radius: 50%;
-    background: radial-gradient(circle, rgba(124,106,255,.18) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(124,106,255,.12) 0%, transparent 70%);
+    pointer-events: none;
   }
   .xp-hero-top { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
   .xp-avatar {
@@ -554,26 +557,26 @@
     background: linear-gradient(135deg, var(--accent), var(--teal));
     display: flex; align-items: center; justify-content: center;
     font-size: 1.5rem; flex-shrink: 0; position: relative;
-    box-shadow: 0 0 0 3px rgba(124,106,255,.3);
+    box-shadow: 0 0 0 3px rgba(124,106,255,.25);
   }
   .xp-avatar-badge {
     position: absolute; bottom: -2px; right: -2px;
-    background: var(--yellow); color: #000; border-radius: 50%;
+    background: var(--yellow); color: #1a1a1a; border-radius: 50%;
     width: 20px; height: 20px; font-size: .62rem; font-weight: 800;
     display: flex; align-items: center; justify-content: center;
-    border: 2px solid var(--bg);
+    border: 2px solid var(--surface2);
   }
   .xp-level-info { flex: 1; min-width: 0; }
   .xp-level-label { font-size: .68rem; color: var(--text3); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 2px; }
-  .xp-level-name { font-family: 'DM Serif Display'; font-size: 1.15rem; color: var(--text); margin-bottom: 1px; }
-  .xp-level-num { font-size: .75rem; color: var(--accent2); font-weight: 600; }
+  .xp-level-name { font-family: 'DM Serif Display'; font-size: 1.15rem; color: var(--text); margin-bottom: 1px; text-shadow: none; }
+  .xp-level-num { font-size: .75rem; color: var(--accent2); font-weight: 700; }
   .xp-stats-row { display: flex; gap: 10px; margin-bottom: 12px; }
-  .xp-stat { flex: 1; background: rgba(255,255,255,.04); border-radius: 10px; padding: 8px 10px; text-align: center; }
+  .xp-stat { flex: 1; background: var(--surface3); border-radius: 10px; padding: 8px 10px; text-align: center; border: 1px solid var(--border); }
   .xp-stat .xs-v { font-size: .95rem; font-weight: 700; color: var(--text); }
   .xp-stat .xs-l { font-size: .6rem; color: var(--text3); text-transform: uppercase; letter-spacing: .05em; margin-top: 2px; }
-  .xp-bar-wrap { height: 10px; background: rgba(255,255,255,.08); border-radius: 5px; overflow: hidden; margin-bottom: 6px; }
+  .xp-bar-wrap { height: 10px; background: var(--surface3); border-radius: 5px; overflow: hidden; margin-bottom: 6px; border: 1px solid var(--border); }
   .xp-bar-fill { height: 100%; border-radius: 5px; background: linear-gradient(90deg, var(--accent), var(--teal)); transition: width .8s cubic-bezier(.4,0,.2,1); }
-  .xp-bar-label { display: flex; justify-content: space-between; font-size: .68rem; color: var(--text3); }
+  .xp-bar-label { display: flex; justify-content: space-between; font-size: .68rem; color: var(--text2); }
   .xp-bar-label span:last-child { color: var(--accent2); font-weight: 600; }
 
   .ach-tabs { display: flex; gap: 6px; margin-bottom: 16px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
@@ -3430,6 +3433,8 @@ const ACH_DEFS = [
   { id:'tx_50',        cat:'記帳入門', icon:'📒',  name:'記帳老手',       desc:'累計記錄 50 筆交易',                    xp:100, check: s => s.txCount >= 50 },
   { id:'tx_100',       cat:'記帳入門', icon:'📚',  name:'百筆達人',       desc:'累計記錄 100 筆交易',                   xp:200, check: s => s.txCount >= 100 },
   { id:'tx_300',       cat:'記帳入門', icon:'🗃️', name:'鐵桿記帳師',     desc:'累計記錄 300 筆交易',                   xp:350, check: s => s.txCount >= 300 },
+  { id:'tx_500',       cat:'記帳入門', icon:'📔',  name:'五百筆里程碑',   desc:'累計記錄 500 筆交易',                   xp:500, check: s => s.txCount >= 500 },
+  { id:'tx_1000',      cat:'記帳入門', icon:'🏅',  name:'千筆傳說',       desc:'累計記錄 1,000 筆交易',                 xp:1000,check: s => s.txCount >= 1000 },
   { id:'note_first',   cat:'記帳入門', icon:'💬',  name:'備注控',         desc:'替一筆交易加上備注說明',                xp:20,  check: s => s.hasNote },
   { id:'note_20',      cat:'記帳入門', icon:'📋',  name:'細節狂魔',       desc:'累計為 20 筆交易加上備注',              xp:80,  check: s => s.noteCount >= 20 },
   { id:'multi_cat',    cat:'記帳入門', icon:'🗂️', name:'分類大師',       desc:'使用超過 5 種不同支出分類',             xp:60,  check: s => s.catCount >= 5 },
@@ -3444,7 +3449,11 @@ const ACH_DEFS = [
   { id:'save_3month',   cat:'收支管理', icon:'📈', name:'連續盈餘 3 月',  desc:'連續 3 個月收入大於支出',               xp:200, check: s => s.posMonths >= 3 },
   { id:'save_6month',   cat:'收支管理', icon:'🚀', name:'半年財務正軌',   desc:'連續 6 個月收入大於支出',               xp:500, check: s => s.posMonths >= 6 },
   { id:'big_income',    cat:'收支管理', icon:'💸', name:'大額收入',       desc:'單筆收入超過 10,000',                   xp:80,  check: s => s.maxIncome >= 10000 },
-  { id:'huge_income',   cat:'收支管理', icon:'🤑', name:'六位數入帳',     desc:'單筆收入超過 100,000',                  xp:200, check: s => s.maxIncome >= 100000 },
+  { id:'income_50k',    cat:'收支管理', icon:'💎', name:'五萬收入',       desc:'單筆收入超過 50,000',                   xp:120, check: s => s.maxIncome >= 50000 },
+  { id:'income_100k',   cat:'收支管理', icon:'🏆', name:'十萬收入',       desc:'單筆收入超過 100,000',                  xp:200, check: s => s.maxIncome >= 100000 },
+  { id:'income_200k',   cat:'收支管理', icon:'🌟', name:'二十萬收入',     desc:'單筆收入超過 200,000',                  xp:300, check: s => s.maxIncome >= 200000 },
+  { id:'income_300k',   cat:'收支管理', icon:'👑', name:'三十萬收入',     desc:'單筆收入超過 300,000',                  xp:400, check: s => s.maxIncome >= 300000 },
+  { id:'income_500k',   cat:'收支管理', icon:'⚡', name:'半百萬收入',     desc:'單筆收入超過 500,000',                  xp:600, check: s => s.maxIncome >= 500000 },
   { id:'low_month_exp', cat:'收支管理', icon:'🧊', name:'節制消費月',     desc:'當月支出低於上月的 70%（且上月有支出）', xp:120, check: s => s.expDropMonth },
   { id:'no_impulse',    cat:'收支管理', icon:'🧘', name:'不衝動購物',     desc:'單月娛樂+購物類支出佔總支出低於 20%',   xp:100, check: s => s.lowImpulseMonth },
 
@@ -3454,27 +3463,43 @@ const ACH_DEFS = [
   { id:'acc_5',        cat:'帳戶管理', icon:'🏛️', name:'帳戶管理達人',   desc:'同時擁有 5 個以上帳戶',                  xp:150, check: s => s.accCount >= 5 },
   { id:'transfer',     cat:'帳戶管理', icon:'🔄', name:'帳戶轉帳',       desc:'完成第一次帳戶轉帳',                    xp:50,  check: s => s.transferCount >= 1 },
   { id:'transfer_10',  cat:'帳戶管理', icon:'⚡', name:'轉帳老手',       desc:'累計完成 10 次帳戶轉帳',                xp:100, check: s => s.transferCount >= 10 },
+  { id:'transfer_50',  cat:'帳戶管理', icon:'🌐', name:'轉帳達人',       desc:'累計完成 50 次帳戶轉帳',                xp:200, check: s => s.transferCount >= 50 },
   { id:'acc_positive', cat:'帳戶管理', icon:'✅', name:'全部帳戶正餘額', desc:'所有帳戶都保持正餘額',                  xp:120, check: s => s.allAccPositive },
-  { id:'acc_million',  cat:'帳戶管理', icon:'💎', name:'百萬身家',       desc:'所有帳戶合計淨資產超過 1,000,000',       xp:500, check: s => s.totalNetWorth >= 1000000 },
+  { id:'acc_100k',     cat:'帳戶管理', icon:'💰', name:'十萬存款',       desc:'所有帳戶合計淨資產超過 100,000',         xp:150, check: s => s.totalNetWorth >= 100000 },
+  { id:'acc_500k',     cat:'帳戶管理', icon:'💎', name:'五十萬身家',     desc:'所有帳戶合計淨資產超過 500,000',         xp:300, check: s => s.totalNetWorth >= 500000 },
+  { id:'acc_million',  cat:'帳戶管理', icon:'👑', name:'百萬身家',       desc:'所有帳戶合計淨資產超過 1,000,000',       xp:500, check: s => s.totalNetWorth >= 1000000 },
+  { id:'acc_2m',       cat:'帳戶管理', icon:'🏅', name:'兩百萬身家',     desc:'所有帳戶合計淨資產超過 2,000,000',       xp:800, check: s => s.totalNetWorth >= 2000000 },
+  { id:'acc_5m',       cat:'帳戶管理', icon:'🌟', name:'五百萬身家',     desc:'所有帳戶合計淨資產超過 5,000,000',       xp:1200,check: s => s.totalNetWorth >= 5000000 },
+  { id:'acc_10m',      cat:'帳戶管理', icon:'⚡', name:'千萬富翁',       desc:'所有帳戶合計淨資產超過 10,000,000',      xp:2000,check: s => s.totalNetWorth >= 10000000 },
 
   // 預算規劃
   { id:'budget_first', cat:'預算規劃', icon:'🎯', name:'預算啟動',       desc:'設定第一個預算',                        xp:50,  check: s => s.budgetCount >= 1 },
   { id:'budget_3',     cat:'預算規劃', icon:'📋', name:'全方位規劃',     desc:'同時設定 3 個以上預算',                 xp:80,  check: s => s.budgetCount >= 3 },
+  { id:'budget_5',     cat:'預算規劃', icon:'📊', name:'預算精英',       desc:'同時設定 5 個以上預算',                 xp:120, check: s => s.budgetCount >= 5 },
   { id:'budget_kept',  cat:'預算規劃', icon:'🛡️', name:'預算守護者',     desc:'當月至少一項預算未超支',                xp:80,  check: s => s.budgetKept },
   { id:'budget_all',   cat:'預算規劃', icon:'🏅', name:'全面控制',       desc:'當月所有預算都未超支',                  xp:180, check: s => s.allBudgetsKept },
   { id:'budget_3m',    cat:'預算規劃', icon:'🏆', name:'三月守預算',     desc:'連續 3 個月所有預算未超支',              xp:350, check: s => s.budgetKeptMonths >= 3 },
+  { id:'budget_6m',    cat:'預算規劃', icon:'💯', name:'半年守預算',     desc:'連續 6 個月所有預算未超支',              xp:700, check: s => s.budgetKeptMonths >= 6 },
 
   // 存錢目標
   { id:'goal_first',   cat:'存錢目標', icon:'🌠', name:'夢想起點',       desc:'設定第一個存錢目標',                    xp:50,  check: s => s.goalCount >= 1 },
   { id:'goal_3',       cat:'存錢目標', icon:'🎪', name:'多目標並進',     desc:'同時追蹤 3 個以上存錢目標',              xp:80,  check: s => s.goalCount >= 3 },
+  { id:'goal_5',       cat:'存錢目標', icon:'🎯', name:'五個夢想',       desc:'同時追蹤 5 個以上存錢目標',              xp:150, check: s => s.goalCount >= 5 },
   { id:'goal_half',    cat:'存錢目標', icon:'⛽', name:'一半到達',       desc:'某個目標達到 50% 進度',                 xp:80,  check: s => s.goalHalf },
+  { id:'goal_90pct',   cat:'存錢目標', icon:'🔥', name:'九成達標',       desc:'某個目標達到 90% 進度',                 xp:150, check: s => s.goal90pct },
   { id:'goal_done',    cat:'存錢目標', icon:'🎉', name:'目標達成！',     desc:'完成第一個存錢目標',                    xp:250, check: s => s.goalDone >= 1 },
-  { id:'goal_3done',   cat:'存錢目標', icon:'👑', name:'連達三目標',     desc:'累計完成 3 個存錢目標',                 xp:500, check: s => s.goalDone >= 3 },
+  { id:'goal_3done',   cat:'存錢目標', icon:'🥉', name:'連達三目標',     desc:'累計完成 3 個存錢目標',                 xp:500, check: s => s.goalDone >= 3 },
+  { id:'goal_5done',   cat:'存錢目標', icon:'🥇', name:'五星達成者',     desc:'累計完成 5 個存錢目標',                 xp:800, check: s => s.goalDone >= 5 },
+  { id:'goal_10done',  cat:'存錢目標', icon:'💫', name:'夢想收割機',     desc:'累計完成 10 個存錢目標',                xp:1500,check: s => s.goalDone >= 10 },
+  { id:'goal_bigtarget',cat:'存錢目標',icon:'🏔️',name:'大目標挑戰者',   desc:'設定一個目標金額超過 500,000 的目標',    xp:100, check: s => s.hasBigGoal },
 
   // 週期帳
   { id:'rec_first',    cat:'週期帳',   icon:'🔁', name:'固定支出',       desc:'設定第一筆週期帳',                      xp:40,  check: s => s.recCount >= 1 },
   { id:'rec_3',        cat:'週期帳',   icon:'📅', name:'週期達人',       desc:'設定 3 筆以上週期帳',                   xp:80,  check: s => s.recCount >= 3 },
-  { id:'rec_5',        cat:'週期帳',   icon:'🤖', name:'自動化管理',     desc:'設定 5 筆以上週期帳，完全掌握固定支出',  xp:150, check: s => s.recCount >= 5 },
+  { id:'rec_5',        cat:'週期帳',   icon:'🤖', name:'自動化管理',     desc:'設定 5 筆以上週期帳',                   xp:150, check: s => s.recCount >= 5 },
+  { id:'rec_8',        cat:'週期帳',   icon:'⚙️', name:'週期帳大師',     desc:'設定 8 筆以上週期帳，徹底掌握固定支出', xp:250, check: s => s.recCount >= 8 },
+  { id:'rec_inc',      cat:'週期帳',   icon:'📈', name:'定期收入',       desc:'設定至少一筆週期收入',                  xp:60,  check: s => s.recIncCount >= 1 },
+  { id:'rec_mix',      cat:'週期帳',   icon:'⚖️', name:'收支週期並重',   desc:'同時擁有週期收入和週期支出各 2 筆以上', xp:120, check: s => s.recIncCount >= 2 && s.recExpCount >= 2 },
 ];
 
 let achData = DB.get('achData') || { claimedIds: [], totalXp: 0 };
@@ -3579,16 +3604,21 @@ function computeAchStats() {
   // goals
   const goalCount = goals.length;
   const goalHalf = goals.some(g => g.target > 0 && (g.saved||0) / g.target >= 0.5);
+  const goal90pct = goals.some(g => g.target > 0 && (g.saved||0) / g.target >= 0.9);
   const goalDone = goals.filter(g => g.target > 0 && (g.saved||0) >= g.target).length;
+  const hasBigGoal = goals.some(g => g.target >= 500000);
 
   // recurring
   const recCount = recurring.length;
+  const recIncCount = recurring.filter(r => r.type === 'income').length;
+  const recExpCount = recurring.filter(r => r.type === 'expense').length;
 
   return { txCount, incomeCount, transferCount, hasNote, noteCount, maxIncome, catCount,
            monthBalance, posMonths, dayStreak, expDropMonth, lowImpulseMonth,
            accCount, allAccPositive, totalNetWorth,
            budgetCount, budgetKept, allBudgetsKept, budgetKeptMonths,
-           goalCount, goalHalf, goalDone, recCount };
+           goalCount, goalHalf, goal90pct, goalDone, hasBigGoal,
+           recCount, recIncCount, recExpCount };
 }
 
 function getLevelInfo(xp) {
