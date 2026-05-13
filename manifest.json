@@ -1,7 +1,7 @@
 {
   "name": "MoneyFlow — 個人記帳系統",
   "short_name": "MoneyFlow",
-  "start_url": "/SpendLog/moneyflow_work.html",
+  "start_url": "/SpendLog/index.html",
   "scope": "/SpendLog/",
   "display": "standalone",
   "background_color": "#0f0f13",
