@@ -465,6 +465,42 @@
     .stat-trio { grid-template-columns: 1fr 1fr; }
     .donut-wrap { flex-direction: column; align-items: flex-start; }
   }
+
+  /* ═══ GOALS PAGE ═══ */
+  .goal-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 18px 16px; margin-bottom: 12px;
+    position: relative; overflow: hidden; cursor: pointer; transition: .15s;
+  }
+  .goal-card:hover { border-color: var(--border2); background: var(--surface2); }
+  .goal-card.completed { border-color: rgba(52,211,153,.4); }
+  .goal-card.completed::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--green); border-radius: var(--radius) var(--radius) 0 0; }
+  .goal-card-header { display:flex; align-items:flex-start; gap:12px; margin-bottom:14px; }
+  .goal-icon { width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.4rem; flex-shrink:0; }
+  .goal-info { flex:1; min-width:0; }
+  .goal-name { font-size:.95rem; font-weight:600; margin-bottom:3px; }
+  .goal-meta { font-size:.75rem; color:var(--text3); }
+  .goal-amounts { display:flex; align-items:baseline; gap:6px; margin-bottom:10px; }
+  .goal-saved { font-size:1.2rem; font-weight:700; color:var(--accent2); }
+  .goal-target { font-size:.85rem; color:var(--text3); }
+  .goal-bar-wrap { height:10px; background:var(--surface2); border-radius:5px; overflow:hidden; margin-bottom:8px; }
+  .goal-bar-fill { height:100%; border-radius:5px; transition:width .6s ease; }
+  .goal-footer { display:flex; align-items:center; justify-content:space-between; }
+  .goal-pct { font-size:.78rem; font-weight:700; }
+  .goal-acc-tag { display:inline-flex; align-items:center; gap:4px; background:rgba(124,106,255,.12); color:var(--accent2); border-radius:6px; padding:2px 8px; font-size:.7rem; font-weight:600; }
+  .goal-done-badge { display:inline-flex; align-items:center; gap:4px; background:rgba(52,211,153,.15); color:var(--green); border-radius:6px; padding:2px 10px; font-size:.75rem; font-weight:700; }
+  .goal-deadline { font-size:.72rem; color:var(--text3); }
+  .goal-actions { display:flex; gap:6px; margin-top:12px; }
+  .goal-btn { flex:1; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--surface2); color:var(--text2); font-size:.78rem; font-weight:600; cursor:pointer; font-family:'DM Sans'; transition:.15s; }
+  .goal-btn:hover { border-color:var(--border2); color:var(--text); }
+  .goal-btn.primary { background:rgba(124,106,255,.2); border-color:rgba(124,106,255,.4); color:var(--accent2); }
+  .goal-btn.primary:hover { background:rgba(124,106,255,.3); }
+  .goal-btn.danger { color:var(--red); }
+  .goal-btn.danger:hover { border-color:rgba(248,113,113,.4); background:rgba(248,113,113,.1); }
+
+  .goal-emoji-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:6px; }
+  .goal-emoji-btn { background:var(--surface2); border:1.5px solid var(--border); border-radius:8px; padding:6px; font-size:1.3rem; cursor:pointer; text-align:center; transition:.15s; }
+  .goal-emoji-btn.selected { border-color:var(--accent); background:rgba(124,106,255,.15); }
 </style>
 </head>
 <body>
@@ -516,6 +552,10 @@
         <div class="sidebar-nav-item" onclick="showPage('recurring',this)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
           週期帳
+        </div>
+        <div class="sidebar-nav-item" onclick="showPage('goals',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none" opacity=".3"/></svg>
+          存錢目標
         </div>
       </div>
     </div>
@@ -654,8 +694,15 @@
           </div>
         </div>
         <div class="chart-card">
-          <h3>每月趨勢</h3>
-          <div class="chart-wrap" style="height:200px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+            <h3 style="margin:0">每日收支分析</h3>
+            <div style="display:flex;gap:10px;font-size:.7rem;color:var(--text3)">
+              <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:rgba(52,211,153,.8);display:inline-block"></span>收入</span>
+              <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:rgba(248,113,113,.8);display:inline-block"></span>支出</span>
+              <span style="display:flex;align-items:center;gap:4px"><span style="width:16px;height:2px;background:var(--accent2);display:inline-block;border-radius:1px"></span>結餘</span>
+            </div>
+          </div>
+          <div class="chart-wrap" style="height:240px">
             <canvas id="barChart"></canvas>
           </div>
         </div>
@@ -760,6 +807,34 @@
       <div class="inner-content">
         <div class="recurring-list" id="recurring-list">
           <div class="empty"><div class="icon">🔁</div><p>尚未設定週期帳</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GOALS -->
+    <div class="page" id="page-goals">
+      <div class="top-bar" style="padding-bottom:16px">
+        <div class="hamburger" onclick="openDrawer()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </div>
+        <h2>存錢目標</h2>
+        <button class="btn-secondary" onclick="openGoalModal()">+ 新增目標</button>
+      </div>
+      <div class="inner-content">
+        <div id="goals-summary" style="display:none;margin-bottom:16px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+            <div class="sum-card">
+              <div class="label">目標總數</div>
+              <div class="amount balance" id="goals-count-val" style="font-size:1.3rem">0</div>
+            </div>
+            <div class="sum-card">
+              <div class="label">已達成</div>
+              <div class="amount income" id="goals-done-val" style="font-size:1.3rem">0</div>
+            </div>
+          </div>
+        </div>
+        <div class="goals-list" id="goals-list">
+          <div class="empty"><div class="icon">🎯</div><p>還沒有存錢目標<br>點擊右上角開始設定</p></div>
         </div>
       </div>
     </div>
@@ -896,6 +971,10 @@
       <div class="drawer-nav-item" id="dnav-recurring" onclick="drawerNav('recurring')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
         週期帳
+      </div>
+      <div class="drawer-nav-item" id="dnav-goals" onclick="drawerNav('goals')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none" opacity=".3"/></svg>
+        存錢目標
       </div>
     </div>
   </div>
@@ -1089,6 +1168,74 @@
   </div>
 </div>
 
+<!-- Goal Modal -->
+<div class="modal-overlay" id="goalModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div class="modal-title" id="goal-modal-title" style="margin:0">新增存錢目標</div>
+      <button onclick="closeModal('goalModal')" style="background:var(--surface2);border:1px solid var(--border);color:var(--text2);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center">✕</button>
+    </div>
+    <!-- Emoji picker -->
+    <div class="form-group">
+      <label class="form-label">選擇圖示</label>
+      <div class="goal-emoji-grid" id="goal-emoji-grid"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">目標名稱</label>
+      <input class="form-input" id="goal-name" placeholder="例：買車、旅遊基金…">
+    </div>
+    <div class="grid-2">
+      <div class="form-group">
+        <label class="form-label">目標金額</label>
+        <div class="amount-input-wrap">
+          <span class="currency">$</span>
+          <input class="form-input" type="number" id="goal-target" placeholder="0" inputmode="decimal" style="padding-left:36px">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">目標日期 <span style="color:var(--text3);font-weight:400">（選填）</span></label>
+        <input class="form-input" type="date" id="goal-deadline">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">連結帳戶 <span style="color:var(--text3);font-weight:400">（存款放在哪個帳戶）</span></label>
+      <select class="form-input form-select" id="goal-account">
+        <option value="">── 不連結帳戶 ──</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">備註 <span style="color:var(--text3);font-weight:400">（選填）</span></label>
+      <input class="form-input" id="goal-note" placeholder="例：買 Tesla Model 3">
+    </div>
+    <button class="btn-primary" id="goal-save-btn" onclick="saveGoal()">新增目標</button>
+  </div>
+</div>
+
+<!-- Goal Deposit Modal -->
+<div class="modal-overlay" id="goalDepositModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div class="modal-title" style="margin:0">存入 / 提領</div>
+      <button onclick="closeModal('goalDepositModal')" style="background:var(--surface2);border:1px solid var(--border);color:var(--text2);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center">✕</button>
+    </div>
+    <div id="goal-deposit-info" style="background:var(--surface2);border-radius:10px;padding:14px;margin-bottom:18px"></div>
+    <div class="type-toggle" style="margin-bottom:18px">
+      <button class="type-btn income active" id="dep-btn-in" onclick="setDepositType('in',this)">存入</button>
+      <button class="type-btn expense" id="dep-btn-out" onclick="setDepositType('out',this)">提領</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">金額</label>
+      <div class="amount-input-wrap">
+        <span class="currency">$</span>
+        <input class="form-input" type="number" id="dep-amount" placeholder="0" inputmode="decimal" style="padding-left:36px;font-size:1.2rem;font-weight:600">
+      </div>
+    </div>
+    <button class="btn-primary" onclick="confirmDeposit()">確認</button>
+  </div>
+</div>
+
 <!-- QR / Invoice modal -->
 <div class="modal-overlay" id="qrModal">
   <div class="modal">
@@ -1124,6 +1271,7 @@ let transactions = DB.get('txs') || [];
 let accounts     = DB.get('accounts') || [];
 let budgets      = DB.get('budgets') || [];
 let recurring    = DB.get('recurring') || [];
+let goals        = DB.get('goals') || [];
 let settings     = DB.get('settings') || { currency: 'TWD', notif: true };
 
 function save() {
@@ -1131,6 +1279,7 @@ function save() {
   DB.set('accounts', accounts);
   DB.set('budgets', budgets);
   DB.set('recurring', recurring);
+  DB.set('goals', goals);
   DB.set('settings', settings);
 }
 
@@ -1216,6 +1365,7 @@ function drawerNav(name) {
   if (name === 'recurring') renderRecurring();
   if (name === 'settings')  loadSettings();
   if (name === 'annual')    renderAnnual();
+  if (name === 'goals')     renderGoals();
 }
 
 // ═══════════════════════════
@@ -1229,7 +1379,7 @@ function showPage(name, el, isMobile) {
   if (isMobile) { const ni = document.getElementById('nav-'+name); if (ni) ni.classList.add('active'); }
   else { if (el) el.classList.add('active'); }
   // auto-expand the sidebar group that contains this page
-  const groupMap = { charts:'sg-analysis', annual:'sg-analysis', budget:'sg-plan', recurring:'sg-plan' };
+  const groupMap = { charts:'sg-analysis', annual:'sg-analysis', budget:'sg-plan', recurring:'sg-plan', goals:'sg-plan' };
   if (groupMap[name]) {
     const grp = document.getElementById(groupMap[name]);
     if (grp && !grp.classList.contains('open')) grp.classList.add('open');
@@ -1240,6 +1390,7 @@ function showPage(name, el, isMobile) {
   if (name === 'recurring') renderRecurring();
   if (name === 'settings')  loadSettings();
   if (name === 'annual')    renderAnnual();
+  if (name === 'goals')     renderGoals();
 }
 
 function toggleSidebarGroup(id) {
@@ -2006,41 +2157,324 @@ function renderCharts() {
     }
   });
 
-  const barLabels=[], barIncome=[], barExpense=[];
-  for (let i=5; i>=0; i--) {
-    let m=currentMonth-i, y=currentYear;
-    if (m<0) { m+=12; y--; }
-    barLabels.push(MONTHS[m]);
-    const mTxs = transactions.filter(t=>{ const d=new Date(t.date); return d.getMonth()===m&&d.getFullYear()===y; });
-    barIncome.push(mTxs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0));
-    barExpense.push(mTxs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0));
+  // ── 每日收支分析 ──
+  const daysInMonth = new Date(currentYear, currentMonth+1, 0).getDate();
+  const dayLabels=[], dayIncome=[], dayExpense=[], dayBalance=[];
+  let runBalance = 0;
+  for (let d=1; d<=daysInMonth; d++) {
+    const ds = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dayTxs = transactions.filter(t=>t.date===ds);
+    const inc = dayTxs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+    const exp = dayTxs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+    runBalance += inc - exp;
+    dayLabels.push(d);
+    dayIncome.push(inc);
+    dayExpense.push(-exp);  // 負數：讓支出往下畫
+    dayBalance.push(runBalance);
   }
 
+  const tc = s => getComputedStyle(document.documentElement).getPropertyValue(s).trim() || '';
   const barCtx = document.getElementById('barChart').getContext('2d');
   if (barInst) barInst.destroy();
   barInst = new Chart(barCtx, {
-    type:'bar',
+    type: 'bar',
     data: {
-      labels: barLabels,
-      datasets:[
-        { label:'收入', data:barIncome,  backgroundColor:'rgba(52,211,153,.7)',  borderRadius:4 },
-        { label:'支出', data:barExpense, backgroundColor:'rgba(248,113,113,.7)', borderRadius:4 },
+      labels: dayLabels,
+      datasets: [
+        {
+          label: '收入',
+          data: dayIncome,
+          backgroundColor: 'rgba(52,211,153,.75)',
+          borderRadius: 3,
+          borderSkipped: false,
+          order: 2,
+          yAxisID: 'y',
+        },
+        {
+          label: '支出',
+          data: dayExpense,
+          backgroundColor: 'rgba(248,113,113,.75)',
+          borderRadius: 3,
+          borderSkipped: false,
+          order: 2,
+          yAxisID: 'y',
+        },
+        {
+          label: '累計結餘',
+          data: dayBalance,
+          type: 'line',
+          borderColor: '#a090ff',
+          backgroundColor: 'rgba(160,144,255,.08)',
+          borderWidth: 2,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          pointHoverBackgroundColor: '#a090ff',
+          fill: false,
+          tension: 0.35,
+          order: 1,
+          yAxisID: 'y2',
+        }
       ]
     },
     options: {
-      responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{ labels:{ color:'#a0a0b8', font:{size:11} } } },
-      scales:{
-        x:{ ticks:{ color:'#606075' }, grid:{ color:'rgba(255,255,255,.04)' } },
-        y:{ ticks:{ color:'#606075' }, grid:{ color:'rgba(255,255,255,.04)' } }
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode:'index', intersect:false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const val = Math.abs(ctx.parsed.y);
+              if (ctx.dataset.label === '支出') return ` 支出：$${val.toLocaleString()}`;
+              if (ctx.dataset.label === '收入') return ` 收入：$${val.toLocaleString()}`;
+              return ` 累計結餘：$${ctx.parsed.y.toLocaleString()}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color:'#606075', font:{size:10}, maxTicksLimit:15, autoSkip:true },
+          grid: { color:'rgba(255,255,255,.04)' }
+        },
+        y: {
+          position: 'left',
+          ticks: {
+            color:'#606075', font:{size:10},
+            callback: v => v === 0 ? '0' : (v > 0 ? '+' : '') + (Math.abs(v)>=1000 ? Math.round(Math.abs(v)/1000)+'k' : Math.abs(v))
+          },
+          grid: { color:'rgba(255,255,255,.06)' },
+        },
+        y2: {
+          position: 'right',
+          ticks: {
+            color:'#a090ff', font:{size:10},
+            callback: v => (v>=1000||v<=-1000) ? (v>0?'+':'')+Math.round(v/1000)+'k' : (v>0?'+':'')+v
+          },
+          grid: { drawOnChartArea: false },
+        }
       }
     }
   });
 }
 
-// ═══════════════════════════
-// EXPORT
-// ═══════════════════════════
+// ═══════════════════════════════════════════
+// GOALS
+// ═══════════════════════════════════════════
+const GOAL_EMOJIS = ['🏠','🚗','✈️','💍','🎓','💻','📱','🛥️','🏋️','🎹','🎮','🌏','👶','🐾','🏔️','🍰','💎','🛍️','🎸','🏦'];
+const GOAL_COLORS = ['#7c6aff','#34d399','#f87171','#fbbf24','#2dd4bf','#f472b6','#fb923c','#60a5fa','#a78bfa','#4ade80'];
+
+let editingGoalId   = null;
+let depositGoalId   = null;
+let depositType     = 'in';
+let selectedGoalEmoji = '🏠';
+
+function buildGoalEmojiGrid() {
+  const grid = document.getElementById('goal-emoji-grid');
+  if (!grid) return;
+  grid.innerHTML = GOAL_EMOJIS.map(e =>
+    `<div class="goal-emoji-btn${e===selectedGoalEmoji?' selected':''}" onclick="selectGoalEmoji('${e}')">${e}</div>`
+  ).join('');
+}
+
+function selectGoalEmoji(e) {
+  selectedGoalEmoji = e;
+  document.querySelectorAll('.goal-emoji-btn').forEach(b => b.classList.toggle('selected', b.textContent===e));
+}
+
+function openGoalModal(id) {
+  editingGoalId = id || null;
+  selectedGoalEmoji = '🏠';
+  document.getElementById('goal-name').value    = '';
+  document.getElementById('goal-target').value  = '';
+  document.getElementById('goal-deadline').value = '';
+  document.getElementById('goal-note').value    = '';
+  document.getElementById('goal-modal-title').textContent = id ? '編輯目標' : '新增存錢目標';
+  document.getElementById('goal-save-btn').textContent   = id ? '儲存變更' : '新增目標';
+
+  if (id) {
+    const g = goals.find(g=>g.id===id);
+    if (g) {
+      selectedGoalEmoji = g.emoji || '🏠';
+      document.getElementById('goal-name').value    = g.name;
+      document.getElementById('goal-target').value  = g.target;
+      document.getElementById('goal-deadline').value = g.deadline || '';
+      document.getElementById('goal-note').value    = g.note || '';
+    }
+  }
+
+  // populate account selector
+  const sel = document.getElementById('goal-account');
+  sel.innerHTML = '<option value="">── 不連結帳戶 ──</option>' +
+    accounts.map(a => `<option value="${a.id}">${a.name}（餘額 ${fmt(a.balance)}）</option>`).join('');
+  if (id) {
+    const g = goals.find(g=>g.id===id);
+    if (g && g.accountId) sel.value = g.accountId;
+  }
+
+  buildGoalEmojiGrid();
+  document.getElementById('goalModal').classList.add('open');
+}
+
+function saveGoal() {
+  const name   = document.getElementById('goal-name').value.trim();
+  const target = parseFloat(document.getElementById('goal-target').value);
+  if (!name)   { showToast('請輸入目標名稱'); return; }
+  if (!target) { showToast('請輸入目標金額'); return; }
+
+  if (editingGoalId) {
+    const g = goals.find(g=>g.id===editingGoalId);
+    if (g) {
+      g.name      = name;
+      g.target    = target;
+      g.emoji     = selectedGoalEmoji;
+      g.deadline  = document.getElementById('goal-deadline').value || null;
+      g.accountId = document.getElementById('goal-account').value || null;
+      g.note      = document.getElementById('goal-note').value.trim() || null;
+    }
+  } else {
+    const colorIdx = goals.length % GOAL_COLORS.length;
+    goals.push({
+      id:        uid(),
+      name,
+      emoji:     selectedGoalEmoji,
+      target,
+      saved:     0,
+      color:     GOAL_COLORS[colorIdx],
+      deadline:  document.getElementById('goal-deadline').value || null,
+      accountId: document.getElementById('goal-account').value || null,
+      note:      document.getElementById('goal-note').value.trim() || null,
+      createdAt: new Date().toISOString(),
+    });
+  }
+
+  save();
+  closeModal('goalModal');
+  renderGoals();
+  showToast(editingGoalId ? '✅ 目標已更新' : '✅ 目標已新增');
+  editingGoalId = null;
+}
+
+function deleteGoal(id) {
+  if (!confirm('確定刪除此目標？')) return;
+  goals = goals.filter(g=>g.id!==id);
+  save();
+  renderGoals();
+  showToast('🗑 目標已刪除');
+}
+
+// ── Deposit / Withdraw ──
+function openDepositModal(id) {
+  depositGoalId = id;
+  depositType   = 'in';
+  document.getElementById('dep-amount').value = '';
+  document.getElementById('dep-btn-in').className  = 'type-btn income active';
+  document.getElementById('dep-btn-out').className = 'type-btn expense';
+
+  const g   = goals.find(g=>g.id===id);
+  const pct = g ? Math.min(Math.round((g.saved/g.target)*100),100) : 0;
+  const acc = g?.accountId ? accounts.find(a=>a.id===g.accountId) : null;
+  document.getElementById('goal-deposit-info').innerHTML = g ? `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <span style="font-size:1.5rem">${g.emoji||'🎯'}</span>
+      <div>
+        <div style="font-weight:600;font-size:.95rem">${g.name}</div>
+        ${acc ? `<div style="font-size:.72rem;color:var(--accent2)">🏦 連結：${acc.name}</div>` : ''}
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:.8rem;color:var(--text3);margin-bottom:6px">
+      <span>已存 <b style="color:var(--accent2)">${fmt(g.saved)}</b></span>
+      <span>目標 <b style="color:var(--text)">${fmt(g.target)}</b></span>
+    </div>
+    <div style="height:8px;background:var(--surface3);border-radius:4px;overflow:hidden">
+      <div style="height:100%;width:${pct}%;background:${g.color||'var(--accent)'};border-radius:4px"></div>
+    </div>
+    <div style="text-align:right;font-size:.72rem;color:var(--text3);margin-top:4px">${pct}%</div>
+  ` : '';
+
+  document.getElementById('goalDepositModal').classList.add('open');
+}
+
+function setDepositType(type, el) {
+  depositType = type;
+  document.getElementById('dep-btn-in').className  = 'type-btn income' + (type==='in'?' active':'');
+  document.getElementById('dep-btn-out').className = 'type-btn expense' + (type==='out'?' active':'');
+}
+
+function confirmDeposit() {
+  const amount = parseFloat(document.getElementById('dep-amount').value);
+  if (!amount || amount <= 0) { showToast('請輸入金額'); return; }
+  const g = goals.find(g=>g.id===depositGoalId);
+  if (!g) return;
+
+  const delta = depositType === 'in' ? amount : -amount;
+  g.saved = Math.max(0, (g.saved || 0) + delta);
+
+  save();
+  closeModal('goalDepositModal');
+  renderGoals();
+  if (g.saved >= g.target) showToast('🎉 恭喜！目標達成！');
+  else showToast(depositType==='in' ? `✅ 已存入 $${fmt(amount)}` : `✅ 已提領 $${fmt(amount)}`);
+}
+
+function renderGoals() {
+  const list = document.getElementById('goals-list');
+  const summary = document.getElementById('goals-summary');
+
+  if (!goals.length) {
+    list.innerHTML = '<div class="empty"><div class="icon">🎯</div><p>還沒有存錢目標<br>點擊右上角開始設定</p></div>';
+    summary.style.display = 'none';
+    return;
+  }
+
+  const done = goals.filter(g=>g.saved>=g.target).length;
+  summary.style.display = 'block';
+  document.getElementById('goals-count-val').textContent = goals.length;
+  document.getElementById('goals-done-val').textContent  = done;
+
+  list.innerHTML = goals.map(g => {
+    const pct     = g.target ? Math.min(Math.round((g.saved/g.target)*100),100) : 0;
+    const isDone  = g.saved >= g.target;
+    const acc     = g.accountId ? accounts.find(a=>a.id===g.accountId) : null;
+    const remain  = Math.max(0, g.target - g.saved);
+    let deadlineHtml = '';
+    if (g.deadline && !isDone) {
+      const days = Math.ceil((new Date(g.deadline)-new Date())/(1000*86400));
+      const color = days < 30 ? 'var(--red)' : days < 90 ? 'var(--yellow)' : 'var(--text3)';
+      deadlineHtml = `<span class="goal-deadline" style="color:${color}">📅 ${days>0?days+'天後':'已到期'}</span>`;
+    }
+    return `<div class="goal-card${isDone?' completed':''}">
+      <div class="goal-card-header">
+        <div class="goal-icon" style="background:${g.color||'var(--accent)'}22">${g.emoji||'🎯'}</div>
+        <div class="goal-info">
+          <div class="goal-name">${g.name}</div>
+          <div class="goal-meta">${g.note||''}${g.note&&acc?'　':''}${acc?`<span class="goal-acc-tag">🏦 ${acc.name}</span>`:''}</div>
+        </div>
+        ${isDone ? '<span class="goal-done-badge">✓ 達成</span>' : ''}
+      </div>
+      <div class="goal-amounts">
+        <span class="goal-saved" style="color:${g.color||'var(--accent2)'}">$${fmt(g.saved)}</span>
+        <span class="goal-target">/ $${fmt(g.target)}</span>
+        ${!isDone ? `<span style="font-size:.72rem;color:var(--text3);margin-left:auto">還差 $${fmt(remain)}</span>` : ''}
+      </div>
+      <div class="goal-bar-wrap">
+        <div class="goal-bar-fill" style="width:${pct}%;background:${isDone?'var(--green)':g.color||'var(--accent)'}"></div>
+      </div>
+      <div class="goal-footer">
+        <span class="goal-pct" style="color:${isDone?'var(--green)':g.color||'var(--accent)'}">${pct}%</span>
+        ${deadlineHtml}
+      </div>
+      <div class="goal-actions">
+        <button class="goal-btn primary" onclick="openDepositModal('${g.id}')">＋ 存入 / 提領</button>
+        <button class="goal-btn" onclick="openGoalModal('${g.id}')">編輯</button>
+        <button class="goal-btn danger" onclick="deleteGoal('${g.id}')">刪除</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+
 function exportCSV() {
   const rows=[['日期','類型','分類','金額','帳戶','支付方式','備註']];
   transactions.forEach(t => {
