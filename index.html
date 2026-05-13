@@ -318,6 +318,11 @@
     .cal-amt { display: none; }
     .vm-btn { padding: 6px 10px; font-size: .75rem; }
   }
+
+  .day-nav-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text2); width: 32px; height: 32px; border-radius: 8px; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: .15s; line-height: 1; }
+  .day-nav-btn:hover { border-color: var(--border2); color: var(--text); }
+  .day-nav-today { background: var(--surface2); border: 1px solid var(--border); color: var(--text3); padding: 0 10px; height: 32px; border-radius: 8px; cursor: pointer; font-size: .75rem; font-weight: 600; font-family: 'DM Sans'; white-space: nowrap; flex-shrink: 0; transition: .15s; }
+  .day-nav-today:hover { border-color: var(--border2); color: var(--text); }
 </style>
 </head>
 <body>
@@ -390,9 +395,11 @@
           </div>
           <!-- Day picker (only visible in day mode) -->
           <div id="day-picker-wrap" style="display:none">
-            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-              <span style="font-size:.78rem;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em">選擇日期</span>
-              <input type="date" id="day-picker" class="form-input" style="width:auto;padding:6px 10px;font-size:.82rem;height:34px" onchange="renderAll()">
+            <div style="display:flex;align-items:center;gap:6px">
+              <button onclick="shiftDay(-1)" class="day-nav-btn">&lsaquo;</button>
+              <input type="date" id="day-picker" class="form-input" style="flex:1;min-width:0;padding:6px 10px;font-size:.85rem;height:32px;text-align:center" onchange="renderAll()">
+              <button onclick="shiftDay(1)" class="day-nav-btn">&rsaquo;</button>
+              <button onclick="shiftDay(0,true)" class="day-nav-today">今天</button>
             </div>
           </div>
         </div>
@@ -1073,6 +1080,18 @@ function renderDayView() {
   renderTxList(txs, document.getElementById('tx-list'), '這天還沒有記帳喔<br>點 + 新增');
 }
 
+function shiftDay(delta, today) {
+  const dp = document.getElementById('day-picker');
+  let d = dp.value ? new Date(dp.value + 'T00:00:00') : new Date();
+  if (today) {
+    d = new Date();
+  } else {
+    d.setDate(d.getDate() + delta);
+  }
+  dp.value = d.toISOString().split('T')[0];
+  renderAll();
+}
+
 // ── Calendar view ──
 function renderCalendarView() {
   // Summary cards show full-month data
@@ -1089,8 +1108,8 @@ function renderCalendarView() {
 
   // If a date is selected, show detail panel
   const listWrap = document.getElementById('list-wrap');
+  listWrap.style.display = calSelectedDate ? 'block' : 'none';
   if (calSelectedDate) {
-    listWrap.style.display = 'block';
     const dayTxs  = getDayTxs(calSelectedDate);
     const dayInc  = dayTxs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
     const dayExp  = dayTxs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
