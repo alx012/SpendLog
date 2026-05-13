@@ -252,8 +252,6 @@
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   @media(min-width:860px) { .toast { bottom: 32px; } }
   
-  .qr-area { background: var(--surface2); border-radius: var(--radius-sm); padding: 20px; text-align: center; margin-bottom: 16px; }
-  .qr-area p { font-size: .82rem; color: var(--text3); margin-top: 10px; }
   
   ::-webkit-scrollbar { width: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -1100,7 +1098,6 @@
       </div>
     </div>
     <div style="display:flex;gap:10px;margin-top:4px">
-      <button class="btn-secondary" onclick="openQRScanner()">📷 掃發票</button>
       <button class="btn-primary" onclick="saveTx()" style="flex:1">儲存</button>
     </div>
     <!-- delete button for edit mode -->
@@ -1284,25 +1281,6 @@
   </div>
 </div>
 
-<!-- QR / Invoice modal -->
-<div class="modal-overlay" id="qrModal">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title">掃描電子發票</div>
-    <div class="qr-area">
-      <div style="font-size:3rem">📷</div>
-      <p>點擊下方按鈕啟用相機，掃描發票 QR Code</p>
-    </div>
-    <div class="form-group">
-      <label class="form-label">或手動輸入發票號碼</label>
-      <input class="form-input" id="invoice-num" placeholder="AB-12345678">
-    </div>
-    <div style="display:flex;gap:10px">
-      <button class="btn-secondary" onclick="closeModal('qrModal');openTxModal()">取消</button>
-      <button class="btn-primary" onclick="applyInvoice()" style="flex:1">套用</button>
-    </div>
-  </div>
-</div>
 
 <!-- Profile Modal -->
 <div class="modal-overlay" id="profileModal">
@@ -2348,8 +2326,9 @@ function renderCharts() {
       },
       scales: {
         x: {
+          offset: true,
           ticks: { color: tickColor, font:{size:10}, maxTicksLimit:15, autoSkip:true },
-          grid:  { color: gridColor }
+          grid:  { color: gridColor, offset: false }
         },
         y: {
           position: 'left',
@@ -2626,21 +2605,6 @@ function exportCSV() {
   showToast('✅ CSV 已匯出');
 }
 
-// ═══════════════════════════
-// QR / INVOICE
-// ═══════════════════════════
-function openQRScanner() {
-  closeModal('txModal');
-  document.getElementById('invoice-num').value = '';
-  document.getElementById('qrModal').classList.add('open');
-}
-function applyInvoice() {
-  const num = document.getElementById('invoice-num').value;
-  closeModal('qrModal');
-  openTxModal();
-  if (num) document.getElementById('tx-note').value = `發票: ${num}`;
-  showToast('📋 已套用發票號碼');
-}
 
 
 // ═══════════════════════════════════════════
