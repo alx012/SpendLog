@@ -79,9 +79,9 @@
     .top-bar { padding: 32px 32px 0; }
   }
   
-  .main { flex: 1; overflow-y: auto; overflow-x: hidden; padding-bottom: calc(var(--bottom-h) + 16px); }
+  .main { flex: 1; overflow-y: auto; overflow-x: hidden; padding-bottom: calc(var(--bottom-h) + env(safe-area-inset-bottom) + 16px); }
   
-  .top-bar { padding: 20px 20px 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .top-bar { padding: calc(20px + env(safe-area-inset-top)) 20px 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
   .top-bar h2 { font-family: 'DM Serif Display'; font-size: 1.5rem; flex-shrink: 0; }
   .top-bar .month-nav { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
   .top-bar .month-nav button { background: var(--surface2); border: 1px solid var(--border); color: var(--text2); width:32px; height:32px; border-radius:8px; cursor:pointer; font-size:.9rem; display:flex; align-items:center; justify-content:center; transition:.15s; }
