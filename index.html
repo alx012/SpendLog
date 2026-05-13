@@ -2138,6 +2138,21 @@ function applyRecurring() {
 let pieInst, barInst;
 
 function renderCharts() {
+  // Read live CSS variables so charts adapt to any theme
+  const css = prop => getComputedStyle(document.documentElement).getPropertyValue(prop).trim();
+  const tickColor   = css('--text3')   || '#888';
+  const tickColor2  = css('--accent2') || '#a090ff';
+  const legendColor = css('--text2')   || '#888';
+  const gridColor   = css('--border')  || 'rgba(128,128,128,0.15)';
+  const accentLine  = css('--accent2') || '#a090ff';
+  const tooltipBg   = css('--surface3') || 'rgba(245,245,248,0.97)';
+  const tooltipTitle = css('--text')   || '#1a1a2e';
+  const tooltipBody  = css('--text2')  || '#555';
+  const tooltipBorder = css('--border2') || 'rgba(0,0,0,0.12)';
+  const accentFill  = accentLine.startsWith('#')
+    ? accentLine + '14'
+    : accentLine.replace(')', ', .08)').replace('rgb', 'rgba');
+
   const txs = getMonthTxs().filter(t=>t.type==='expense');
   const catMap = {};
   txs.forEach(t => { catMap[t.cat] = (catMap[t.cat]||0) + t.amount; });
@@ -2152,7 +2167,19 @@ function renderCharts() {
     data: { labels, datasets:[{ data, backgroundColor:colors, borderWidth:0, hoverOffset:4 }] },
     options: {
       responsive:true, maintainAspectRatio:false,
-      plugins: { legend:{ position:'right', labels:{ color:'#a0a0b8', font:{size:11}, boxWidth:12 } } },
+      plugins: {
+        legend:{
+          position:'right',
+          labels:{ color: legendColor, font:{size:11}, boxWidth:12 }
+        },
+        tooltip: {
+          backgroundColor: tooltipBg,
+          titleColor: tooltipTitle,
+          bodyColor:  tooltipBody,
+          borderColor: tooltipBorder,
+          borderWidth: 1,
+        }
+      },
       cutout:'65%',
     }
   });
@@ -2173,7 +2200,6 @@ function renderCharts() {
     dayBalance.push(runBalance);
   }
 
-  const tc = s => getComputedStyle(document.documentElement).getPropertyValue(s).trim() || '';
   const barCtx = document.getElementById('barChart').getContext('2d');
   if (barInst) barInst.destroy();
   barInst = new Chart(barCtx, {
@@ -2203,12 +2229,12 @@ function renderCharts() {
           label: '累計結餘',
           data: dayBalance,
           type: 'line',
-          borderColor: '#a090ff',
-          backgroundColor: 'rgba(160,144,255,.08)',
+          borderColor: accentLine,
+          backgroundColor: accentFill,
           borderWidth: 2,
           pointRadius: 0,
           pointHoverRadius: 4,
-          pointHoverBackgroundColor: '#a090ff',
+          pointHoverBackgroundColor: accentLine,
           fill: false,
           tension: 0.35,
           order: 1,
@@ -2223,6 +2249,11 @@ function renderCharts() {
       plugins: {
         legend: { display: false },
         tooltip: {
+          backgroundColor: tooltipBg,
+          titleColor: tooltipTitle,
+          bodyColor:  tooltipBody,
+          borderColor: tooltipBorder,
+          borderWidth: 1,
           callbacks: {
             label: ctx => {
               const val = Math.abs(ctx.parsed.y);
@@ -2235,21 +2266,21 @@ function renderCharts() {
       },
       scales: {
         x: {
-          ticks: { color:'#606075', font:{size:10}, maxTicksLimit:15, autoSkip:true },
-          grid: { color:'rgba(255,255,255,.04)' }
+          ticks: { color: tickColor, font:{size:10}, maxTicksLimit:15, autoSkip:true },
+          grid:  { color: gridColor }
         },
         y: {
           position: 'left',
           ticks: {
-            color:'#606075', font:{size:10},
+            color: tickColor, font:{size:10},
             callback: v => v === 0 ? '0' : (v > 0 ? '+' : '') + (Math.abs(v)>=1000 ? Math.round(Math.abs(v)/1000)+'k' : Math.abs(v))
           },
-          grid: { color:'rgba(255,255,255,.06)' },
+          grid: { color: gridColor },
         },
         y2: {
           position: 'right',
           ticks: {
-            color:'#a090ff', font:{size:10},
+            color: tickColor2, font:{size:10},
             callback: v => (v>=1000||v<=-1000) ? (v>0?'+':'')+Math.round(v/1000)+'k' : (v>0?'+':'')+v
           },
           grid: { drawOnChartArea: false },
@@ -2428,23 +2459,32 @@ function renderGoals() {
     return;
   }
 
-  const done = goals.filter(g=>g.saved>=g.target).length;
+  const activeGoals    = goals.filter(g => g.saved < g.target);
+  const completedGoals = goals.filter(g => g.saved >= g.target);
+
   summary.style.display = 'block';
   document.getElementById('goals-count-val').textContent = goals.length;
-  document.getElementById('goals-done-val').textContent  = done;
+  document.getElementById('goals-done-val').textContent  = completedGoals.length;
 
-  list.innerHTML = goals.map(g => {
-    const pct     = g.target ? Math.min(Math.round((g.saved/g.target)*100),100) : 0;
-    const isDone  = g.saved >= g.target;
-    const acc     = g.accountId ? accounts.find(a=>a.id===g.accountId) : null;
-    const remain  = Math.max(0, g.target - g.saved);
+  function goalCardHtml(g) {
+    const pct    = g.target ? Math.min(Math.round((g.saved/g.target)*100),100) : 0;
+    const isDone = g.saved >= g.target;
+    const acc    = g.accountId ? accounts.find(a=>a.id===g.accountId) : null;
+    const remain = Math.max(0, g.target - g.saved);
+
     let deadlineHtml = '';
     if (g.deadline && !isDone) {
-      const days = Math.ceil((new Date(g.deadline)-new Date())/(1000*86400));
-      const color = days < 30 ? 'var(--red)' : days < 90 ? 'var(--yellow)' : 'var(--text3)';
-      deadlineHtml = `<span class="goal-deadline" style="color:${color}">📅 ${days>0?days+'天後':'已到期'}</span>`;
+      const days  = Math.ceil((new Date(g.deadline) - new Date()) / (1000*86400));
+      const color = days < 0 ? 'var(--red)' : days < 30 ? 'var(--red)' : days < 90 ? 'var(--yellow)' : 'var(--text3)';
+      const label = days < 0
+        ? `⚠️ 已逾期 ${Math.abs(days)} 天`
+        : days === 0 ? '⚠️ 今天到期' : `📅 ${days} 天後`;
+      deadlineHtml = `<span class="goal-deadline" style="color:${color};font-weight:${days<0?700:400}">${label}</span>`;
     }
-    return `<div class="goal-card${isDone?' completed':''}">
+
+    const isOverdue = !isDone && g.deadline && Math.ceil((new Date(g.deadline)-new Date())/(1000*86400)) < 0;
+
+    return `<div class="goal-card${isDone?' completed':''}${isOverdue?' overdue':''}">
       <div class="goal-card-header">
         <div class="goal-icon" style="background:${g.color||'var(--accent)'}22">${g.emoji||'🎯'}</div>
         <div class="goal-info">
@@ -2452,26 +2492,41 @@ function renderGoals() {
           <div class="goal-meta">${g.note||''}${g.note&&acc?'　':''}${acc?`<span class="goal-acc-tag">🏦 ${acc.name}</span>`:''}</div>
         </div>
         ${isDone ? '<span class="goal-done-badge">✓ 達成</span>' : ''}
+        ${isOverdue ? '<span class="goal-overdue-badge">逾期</span>' : ''}
       </div>
       <div class="goal-amounts">
-        <span class="goal-saved" style="color:${g.color||'var(--accent2)'}">$${fmt(g.saved)}</span>
+        <span class="goal-saved" style="color:${isDone?'var(--green)':isOverdue?'var(--red)':g.color||'var(--accent2)'}">$${fmt(g.saved)}</span>
         <span class="goal-target">/ $${fmt(g.target)}</span>
         ${!isDone ? `<span style="font-size:.72rem;color:var(--text3);margin-left:auto">還差 $${fmt(remain)}</span>` : ''}
       </div>
       <div class="goal-bar-wrap">
-        <div class="goal-bar-fill" style="width:${pct}%;background:${isDone?'var(--green)':g.color||'var(--accent)'}"></div>
+        <div class="goal-bar-fill" style="width:${pct}%;background:${isDone?'var(--green)':isOverdue?'var(--red)':g.color||'var(--accent)'}"></div>
       </div>
       <div class="goal-footer">
-        <span class="goal-pct" style="color:${isDone?'var(--green)':g.color||'var(--accent)'}">${pct}%</span>
+        <span class="goal-pct" style="color:${isDone?'var(--green)':isOverdue?'var(--red)':g.color||'var(--accent)'}">${pct}%</span>
         ${deadlineHtml}
       </div>
       <div class="goal-actions">
-        <button class="goal-btn primary" onclick="openDepositModal('${g.id}')">＋ 存入 / 提領</button>
+        ${!isDone ? `<button class="goal-btn primary" onclick="openDepositModal('${g.id}')">＋ 存入 / 提領</button>` : ''}
+        ${isDone  ? `<button class="goal-btn" onclick="openDepositModal('${g.id}')" style="color:var(--text3)">調整金額</button>` : ''}
         <button class="goal-btn" onclick="openGoalModal('${g.id}')">編輯</button>
         <button class="goal-btn danger" onclick="deleteGoal('${g.id}')">刪除</button>
       </div>
     </div>`;
-  }).join('');
+  }
+
+  let html = activeGoals.map(goalCardHtml).join('');
+
+  if (completedGoals.length) {
+    html += `<div style="display:flex;align-items:center;gap:10px;margin:20px 0 12px">
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+      <span style="font-size:.72rem;color:var(--green);font-weight:700;letter-spacing:.06em;white-space:nowrap">✓ 已達成 ${completedGoals.length} 個</span>
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+    </div>`;
+    html += completedGoals.map(goalCardHtml).join('');
+  }
+
+  list.innerHTML = html;
 }
 
 
@@ -2573,9 +2628,10 @@ function renderAnnual() {
   }
 
   // ── Bar chart ──
-  const barCtx = document.getElementById('annualBarChart').getContext('2d');
+  const annCss = prop => getComputedStyle(document.documentElement).getPropertyValue(prop).trim();
+  const annBarCtx = document.getElementById('annualBarChart').getContext('2d');
   if (annualBarInst) annualBarInst.destroy();
-  annualBarInst = new Chart(barCtx, {
+  annualBarInst = new Chart(annBarCtx, {
     type: 'bar',
     data: {
       labels: MONTHS,
@@ -2586,10 +2642,19 @@ function renderAnnual() {
     },
     options: {
       responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{ labels:{ color: getComputedStyle(document.documentElement).getPropertyValue('--text2')||'#a0a0b8', font:{size:11}, boxWidth:10 } } },
+      plugins:{
+        legend:{ labels:{ color: annCss('--text2')||'#888', font:{size:11}, boxWidth:10 } },
+        tooltip:{
+          backgroundColor: annCss('--surface3')||'rgba(245,245,248,0.97)',
+          titleColor: annCss('--text')||'#1a1a2e',
+          bodyColor:  annCss('--text2')||'#555',
+          borderColor: annCss('--border2')||'rgba(0,0,0,0.12)',
+          borderWidth: 1,
+        }
+      },
       scales:{
-        x:{ ticks:{ color: getComputedStyle(document.documentElement).getPropertyValue('--text3')||'#606075', font:{size:11} }, grid:{ color:'rgba(255,255,255,.04)' } },
-        y:{ ticks:{ color: getComputedStyle(document.documentElement).getPropertyValue('--text3')||'#606075', font:{size:11}, callback: v => v>=1000?Math.round(v/1000)+'k':v }, grid:{ color:'rgba(255,255,255,.04)' } }
+        x:{ ticks:{ color: annCss('--text3')||'#888', font:{size:11} }, grid:{ color: annCss('--border')||'rgba(128,128,128,.15)' } },
+        y:{ ticks:{ color: annCss('--text3')||'#888', font:{size:11}, callback: v => v>=1000?Math.round(v/1000)+'k':v }, grid:{ color: annCss('--border')||'rgba(128,128,128,.15)' } }
       }
     }
   });
@@ -2608,7 +2673,16 @@ function renderAnnual() {
     data: { labels: catLabels, datasets:[{ data: catData, backgroundColor: catColors, borderWidth: 0, hoverOffset: 5 }] },
     options: {
       responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{ display:false } },
+      plugins:{
+        legend:{ display:false },
+        tooltip:{
+          backgroundColor: annCss('--surface3')||'rgba(245,245,248,0.97)',
+          titleColor: annCss('--text')||'#1a1a2e',
+          bodyColor:  annCss('--text2')||'#555',
+          borderColor: annCss('--border2')||'rgba(0,0,0,0.12)',
+          borderWidth: 1,
+        }
+      },
       cutout:'68%',
     }
   });
