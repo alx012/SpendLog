@@ -35,7 +35,7 @@
     --radius-sm: 10px;
     --shadow: 0 8px 32px rgba(0,0,0,0.4);
     --nav-h: 64px;
-    --bottom-h: 80px;
+    --bottom-h: 100px;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   html, body { height: 100%; font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
@@ -76,12 +76,12 @@
     .bottom-nav { display: none; }
     .main { flex: 1; min-width: 0; height: 100%; overflow-y: auto; overflow-x: hidden; padding-bottom: 0; }
     .page { max-width: 860px; margin: 0 auto; }
-    .top-bar { padding: 32px 32px 0; }
+    .top-bar { padding: 32px 32px 12px; position: static; background: transparent; }
   }
   
   .main { flex: 1; overflow-y: auto; overflow-x: hidden; padding-bottom: calc(var(--bottom-h) + 16px); }
   
-  .top-bar { padding: 20px 20px 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .top-bar { padding: 20px 20px 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; position: sticky; top: 0; z-index: 50; background: var(--bg); }
   .top-bar h2 { font-family: 'DM Serif Display'; font-size: 1.5rem; flex-shrink: 0; }
   .top-bar .month-nav { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
   .top-bar .month-nav button { background: var(--surface2); border: 1px solid var(--border); color: var(--text2); width:32px; height:32px; border-radius:8px; cursor:pointer; font-size:.9rem; display:flex; align-items:center; justify-content:center; transition:.15s; }
@@ -90,7 +90,7 @@
   .top-bar .month-label:hover { background:var(--surface2); color:var(--text); }
   .top-bar .month-label.stale { color:var(--accent2); }
   
-  .page { padding: 20px; display: none; }
+  .page { padding: 0; display: none; }
   .page.active { display: block; }
   @media(min-width:860px) { .page { padding: 24px 32px 32px; } }
   
@@ -124,7 +124,7 @@
     width: 100%;
     background: var(--surface); border-top: 1px solid var(--border);
     display: flex; align-items: center;
-    height: var(--bottom-h); z-index: 100; padding: 0 4px 8px;
+    height: var(--bottom-h); z-index: 100; padding: 0 4px 20px;
   }
   .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px; cursor: pointer; color: var(--text3); font-size: .67rem; font-weight: 500; transition: .15s; border-radius: 8px; }
   .nav-item svg { width: 22px; height: 22px; }
@@ -309,7 +309,6 @@
     .sum-card .label { font-size: .65rem; letter-spacing: 0; }
     .sum-card { padding: 10px 8px; }
     .cat-grid { grid-template-columns: repeat(3, 1fr); }
-    .page { padding: 14px; }
   }
 
   /* ── account hint banner ── */
