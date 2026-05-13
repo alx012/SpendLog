@@ -35,7 +35,7 @@
     --radius-sm: 10px;
     --shadow: 0 8px 32px rgba(0,0,0,0.4);
     --nav-h: 64px;
-    --bottom-h: 100px;
+    --bottom-h: 120px;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   html, body { height: 100%; font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
@@ -79,7 +79,7 @@
     .sidebar-group.open .sidebar-group-items { max-height: 400px; }
     .sidebar-group .sidebar-nav-item { padding-left: 32px; font-size: .85rem; }
 
-    .bottom-nav { display: flex; left: 0 !important; width: 100% !important; padding-left: 220px; }
+    .bottom-nav { left: 220px !important; width: calc(100% - 220px) !important; padding-left: 0; }
     .main { flex: 1; min-width: 0; height: 100%; overflow-y: auto; overflow-x: hidden; padding-bottom: 0; }
     .page { max-width: 860px; margin: 0 auto; }
     .top-bar { padding: 32px 32px 12px; position: static; background: transparent; }
