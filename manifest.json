@@ -1,0 +1,21 @@
+{
+  "name": "MoneyFlow — 個人記帳系統",
+  "short_name": "MoneyFlow",
+  "start_url": "./moneyflow_work.html",
+  "display": "standalone",
+  "background_color": "#0f0f13",
+  "theme_color": "#0f0f13",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://placehold.co/192x192/7c6aff/ffffff?text=MF",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://placehold.co/512x512/7c6aff/ffffff?text=MF",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
