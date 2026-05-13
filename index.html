@@ -263,6 +263,61 @@
 
   /* ── account hint banner ── */
   .acc-hint { background: rgba(124,106,255,.1); border: 1px solid rgba(124,106,255,.25); border-radius: var(--radius-sm); padding: 10px 14px; font-size: .8rem; color: var(--accent2); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+
+  /* ── View mode toggle ── */
+  .view-mode-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+  .view-mode-toggle { display: flex; background: var(--surface2); border-radius: 10px; padding: 3px; gap: 2px; }
+  .vm-btn { display: flex; align-items: center; gap: 5px; padding: 6px 14px; border-radius: 8px; border: none; background: transparent; color: var(--text3); font-size: .8rem; font-weight: 600; cursor: pointer; transition: .15s; font-family: 'DM Sans'; white-space: nowrap; }
+  .vm-btn.active { background: var(--surface3); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,.3); }
+  .vm-btn:hover:not(.active) { color: var(--text2); }
+
+  /* ── Calendar grid ── */
+  .calendar-grid { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 4px; }
+  .cal-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); background: var(--surface2); border-bottom: 1px solid var(--border); }
+  .cal-wd { text-align: center; padding: 8px 2px; font-size: .68rem; font-weight: 600; color: var(--text3); letter-spacing: .04em; }
+  .cal-wd:first-child { color: #f87171; }
+  .cal-wd:last-child  { color: #7cb3ff; }
+  .cal-days { display: grid; grid-template-columns: repeat(7, 1fr); }
+  .cal-cell {
+    min-height: 62px; padding: 5px 4px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border);
+    cursor: pointer; transition: background .12s; position: relative; overflow: hidden;
+  }
+  .cal-cell:hover { background: var(--surface2); }
+  .cal-cell.today { background: rgba(124,106,255,.08); }
+  .cal-cell.today .cal-day-num { color: var(--accent2); background: rgba(124,106,255,.2); border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; }
+  .cal-cell.cal-selected { background: rgba(124,106,255,.18) !important; outline: 1.5px solid var(--accent); outline-offset: -1px; }
+  .cal-cell.other-month { opacity: .45; }
+  .cal-cell:nth-child(7n)        { border-right: none; }
+  .cal-cell:nth-last-child(-n+7) { border-bottom: none; }
+  .cal-day-num { font-size: .75rem; font-weight: 600; color: var(--text2); line-height: 20px; padding-left: 1px; margin-bottom: 2px; }
+  .cal-day-num.sun { color: #f87171; }
+  .cal-day-num.sat { color: #7cb3ff; }
+  .cal-amounts { display: flex; flex-direction: column; gap: 1px; }
+  .cal-amt { font-size: .6rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.35; padding: 0 2px; border-radius: 2px; }
+  .cal-amt.income  { color: var(--green); }
+  .cal-amt.expense { color: var(--red); }
+
+  /* Day detail panel */
+  .day-detail-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-top: 10px; animation: slideDown .2s ease; }
+  @keyframes slideDown { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+  .day-detail-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .day-detail-date { font-family: 'DM Serif Display'; font-size: 1.05rem; }
+  .day-detail-close { background: var(--surface2); border: 1px solid var(--border); color: var(--text3); width: 26px; height: 26px; border-radius: 6px; cursor: pointer; font-size: .85rem; display: flex; align-items: center; justify-content: center; }
+  .day-detail-stats { display: flex; gap: 8px; margin-bottom: 12px; }
+  .day-stat { flex: 1; background: var(--surface2); border-radius: 8px; padding: 8px 10px; }
+  .day-stat .ds-label { font-size: .62rem; color: var(--text3); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 3px; }
+  .day-stat .ds-val { font-size: .88rem; font-weight: 600; }
+
+  @media(min-width:860px) {
+    .cal-cell { min-height: 76px; padding: 6px; }
+    .cal-day-num { font-size: .8rem; }
+    .cal-amt { font-size: .65rem; }
+  }
+  @media(max-width:359px) {
+    .cal-cell { min-height: 48px; padding: 3px 2px; }
+    .cal-amt { display: none; }
+    .vm-btn { padding: 6px 10px; font-size: .75rem; }
+  }
 </style>
 </head>
 <body>
@@ -316,13 +371,40 @@
         </div>
       </div>
       <div class="inner-content" style="padding-top:16px" id="dashboard-inner">
+
+        <!-- ── View mode toggle ── -->
+        <div class="view-mode-bar">
+          <div class="view-mode-toggle">
+            <button class="vm-btn active" id="vm-month" onclick="setViewMode('month')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              月
+            </button>
+            <button class="vm-btn" id="vm-day" onclick="setViewMode('day')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              日
+            </button>
+            <button class="vm-btn" id="vm-cal" onclick="setViewMode('calendar')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><rect x="8" y="14" width="3" height="3" rx="0.5" fill="currentColor" stroke="none"/><rect x="13" y="14" width="3" height="3" rx="0.5" fill="currentColor" stroke="none"/></svg>
+              日曆
+            </button>
+          </div>
+          <!-- Day picker (only visible in day mode) -->
+          <div id="day-picker-wrap" style="display:none">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <span style="font-size:.78rem;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em">選擇日期</span>
+              <input type="date" id="day-picker" class="form-input" style="width:auto;padding:6px 10px;font-size:.82rem;height:34px" onchange="renderAll()">
+            </div>
+          </div>
+        </div>
+
+        <!-- Summary cards -->
         <div class="summary-row">
           <div class="sum-card">
-            <div class="label">收入</div>
+            <div class="label" id="sum-label-income">收入</div>
             <div class="amount income" id="sum-income">$0</div>
           </div>
           <div class="sum-card">
-            <div class="label">支出</div>
+            <div class="label" id="sum-label-expense">支出</div>
             <div class="amount expense" id="sum-expense">$0</div>
           </div>
           <div class="sum-card">
@@ -330,10 +412,20 @@
             <div class="amount balance" id="sum-balance">$0</div>
           </div>
         </div>
-        <div class="section-title">近期交易</div>
-        <div class="tx-list" id="tx-list">
-          <div class="empty"><div class="icon">📋</div><p>還沒有交易紀錄<br>點擊 + 開始新增</p></div>
+
+        <!-- Calendar view -->
+        <div id="calendar-wrap" style="display:none">
+          <div class="calendar-grid" id="calendar-grid"></div>
         </div>
+
+        <!-- List view -->
+        <div id="list-wrap">
+          <div class="section-title" id="list-section-title">近期交易</div>
+          <div class="tx-list" id="tx-list">
+            <div class="empty"><div class="icon">📋</div><p>還沒有交易紀錄<br>點擊 + 開始新增</p></div>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -857,6 +949,7 @@ function showPage(name, el, isMobile) {
 // MONTH NAV
 // ═══════════════════════════
 const MONTHS = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+const MONTH_NAMES_FULL = ['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
 function updateMonthLabel() {
   const label = `${currentYear} ${MONTHS[currentMonth]}`;
   document.getElementById('monthLabel').textContent = label;
@@ -867,6 +960,47 @@ function changeMonth(d) {
   if (currentMonth > 11) { currentMonth = 0; currentYear++; }
   if (currentMonth < 0)  { currentMonth = 11; currentYear--; }
   updateMonthLabel();
+  // reset calendar selected day when month changes
+  calSelectedDate = null;
+  renderAll();
+}
+
+// ═══════════════════════════
+// VIEW MODE
+// ═══════════════════════════
+let viewMode = 'month'; // 'month' | 'day' | 'calendar'
+let calSelectedDate = null; // 'YYYY-MM-DD' string
+
+function setViewMode(mode) {
+  viewMode = mode;
+  document.querySelectorAll('.vm-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('vm-' + mode).classList.add('active');
+
+  const dayPickerWrap  = document.getElementById('day-picker-wrap');
+  const calendarWrap   = document.getElementById('calendar-wrap');
+  const listWrap       = document.getElementById('list-wrap');
+
+  const monthNavEl = document.querySelector('#page-dashboard .month-nav');
+
+  if (mode === 'day') {
+    dayPickerWrap.style.display = 'block';
+    calendarWrap.style.display  = 'none';
+    listWrap.style.display      = 'block';
+    if (monthNavEl) monthNavEl.style.visibility = 'hidden';
+    // default to today if not set
+    const dp = document.getElementById('day-picker');
+    if (!dp.value) dp.value = new Date().toISOString().split('T')[0];
+  } else if (mode === 'calendar') {
+    dayPickerWrap.style.display = 'none';
+    calendarWrap.style.display  = 'block';
+    listWrap.style.display      = calSelectedDate ? 'block' : 'none';
+    if (monthNavEl) monthNavEl.style.visibility = 'visible';
+  } else {
+    dayPickerWrap.style.display = 'none';
+    calendarWrap.style.display  = 'none';
+    listWrap.style.display      = 'block';
+    if (monthNavEl) monthNavEl.style.visibility = 'visible';
+  }
   renderAll();
 }
 
@@ -880,22 +1014,227 @@ function getMonthTxs() {
   });
 }
 
+function getDayTxs(dateStr) {
+  return transactions.filter(t => t.date === dateStr);
+}
+
 function renderAll() {
-  const txs = getMonthTxs();
+  if (viewMode === 'month') {
+    renderMonthView();
+  } else if (viewMode === 'day') {
+    renderDayView();
+  } else {
+    renderCalendarView();
+  }
+  renderCharts();
+  checkBudgetWarnings();
+}
+
+// ── Month view ──
+function renderMonthView() {
+  const txs     = getMonthTxs();
   const income  = txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
   const expense = txs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  document.getElementById('sum-label-income').textContent  = '本月收入';
+  document.getElementById('sum-label-expense').textContent = '本月支出';
   document.getElementById('sum-income').textContent  = fmt(income);
   document.getElementById('sum-expense').textContent = fmt(expense);
   document.getElementById('sum-balance').textContent = fmt(income - expense);
 
-  const list = document.getElementById('tx-list');
+  const title = document.getElementById('list-section-title');
+  if (title) title.textContent = '近期交易';
+
+  renderTxList(txs, document.getElementById('tx-list'), '這個月還沒有記帳喔<br>點 + 新增第一筆');
+}
+
+// ── Day view ──
+function renderDayView() {
+  const dateStr = document.getElementById('day-picker').value;
+  const txs     = dateStr ? getDayTxs(dateStr) : [];
+  const income  = txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const expense = txs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+
+  document.getElementById('sum-label-income').textContent  = '當日收入';
+  document.getElementById('sum-label-expense').textContent = '當日支出';
+  document.getElementById('sum-income').textContent  = fmt(income);
+  document.getElementById('sum-expense').textContent = fmt(expense);
+  document.getElementById('sum-balance').textContent = fmt(income - expense);
+
+  const title = document.getElementById('list-section-title');
+  if (dateStr) {
+    const d = new Date(dateStr);
+    // sync the month label in header to reflect selected date
+    currentMonth = d.getMonth();
+    currentYear  = d.getFullYear();
+    updateMonthLabel();
+    if (title) title.textContent = `${d.getMonth()+1} 月 ${d.getDate()} 日 的明細`;
+  }
+
+  renderTxList(txs, document.getElementById('tx-list'), '這天還沒有記帳喔<br>點 + 新增');
+}
+
+// ── Calendar view ──
+function renderCalendarView() {
+  // Summary cards show full-month data
+  const allMonthTxs = getMonthTxs();
+  const income      = allMonthTxs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const expense     = allMonthTxs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  document.getElementById('sum-label-income').textContent  = '本月收入';
+  document.getElementById('sum-label-expense').textContent = '本月支出';
+  document.getElementById('sum-income').textContent  = fmt(income);
+  document.getElementById('sum-expense').textContent = fmt(expense);
+  document.getElementById('sum-balance').textContent = fmt(income - expense);
+
+  buildCalendar();
+
+  // If a date is selected, show detail panel
+  const listWrap = document.getElementById('list-wrap');
+  if (calSelectedDate) {
+    listWrap.style.display = 'block';
+    const dayTxs  = getDayTxs(calSelectedDate);
+    const dayInc  = dayTxs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+    const dayExp  = dayTxs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+    const di = calSelectedDate.split('-');
+    const title = document.getElementById('list-section-title');
+    const selectedDs = calSelectedDate;
+    if (title) title.innerHTML = `${parseInt(di[1])} 月 ${parseInt(di[2])} 日 的明細&nbsp;<button onclick="calDayClick('${selectedDs}')" style="background:var(--surface2);border:1px solid var(--border);color:var(--text3);padding:2px 8px;border-radius:6px;font-size:.68rem;cursor:pointer;font-family:'DM Sans';vertical-align:middle">✕ 關閉</button>`;
+
+    // inject day stats mini-row above tx list
+    let statsEl = document.getElementById('cal-day-stats');
+    if (!statsEl) {
+      statsEl = document.createElement('div');
+      statsEl.id = 'cal-day-stats';
+      statsEl.className = 'day-detail-stats';
+      listWrap.insertBefore(statsEl, document.getElementById('tx-list'));
+    }
+    statsEl.innerHTML = `
+      <div class="day-stat">
+        <div class="ds-label">收入</div>
+        <div class="ds-val" style="color:var(--green)">${dayInc>0?'+'+fmt(dayInc):'$0'}</div>
+      </div>
+      <div class="day-stat">
+        <div class="ds-label">支出</div>
+        <div class="ds-val" style="color:var(--red)">${dayExp>0?'-'+fmt(dayExp):'$0'}</div>
+      </div>
+      <div class="day-stat">
+        <div class="ds-label">結餘</div>
+        <div class="ds-val" style="color:var(--accent2)">${fmt(dayInc-dayExp)}</div>
+      </div>`;
+    statsEl.style.display = 'flex';
+
+    renderTxList(dayTxs, document.getElementById('tx-list'), '這天還沒有任何交易');
+  } else {
+    listWrap.style.display = 'none';
+    const statsEl = document.getElementById('cal-day-stats');
+    if (statsEl) statsEl.style.display = 'none';
+  }
+}
+
+function buildCalendar() {
+  const grid = document.getElementById('calendar-grid');
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+
+  // first day of month (0=Sun)
+  const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+  const daysInMonth = new Date(currentYear, currentMonth+1, 0).getDate();
+  const daysInPrevMonth = new Date(currentYear, currentMonth, 0).getDate();
+
+  // build day-level totals map
+  const dayMap = {}; // 'YYYY-MM-DD' -> {income, expense}
+  getMonthTxs().forEach(t => {
+    if (!dayMap[t.date]) dayMap[t.date] = {income:0, expense:0};
+    if (t.type==='income')  dayMap[t.date].income  += t.amount;
+    if (t.type==='expense') dayMap[t.date].expense += t.amount;
+  });
+
+  const weekdays = ['日','一','二','三','四','五','六'];
+  let html = `<div class="cal-weekdays">${weekdays.map(w=>`<div class="cal-wd">${w}</div>`).join('')}</div><div class="cal-days">`;
+
+  // prev month overflow
+  for (let i = firstDay - 1; i >= 0; i--) {
+    const d = daysInPrevMonth - i;
+    const m = currentMonth - 1 < 0 ? 11 : currentMonth - 1;
+    const y = currentMonth - 1 < 0 ? currentYear - 1 : currentYear;
+    const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    html += calCell(d, ds, true, todayStr);
+  }
+
+  // current month
+  for (let d = 1; d <= daysInMonth; d++) {
+    const ds = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    html += calCell(d, ds, false, todayStr, dayMap[ds]);
+  }
+
+  // next month overflow to fill row
+  const total = firstDay + daysInMonth;
+  const rem = total % 7 === 0 ? 0 : 7 - (total % 7);
+  for (let d = 1; d <= rem; d++) {
+    const m = currentMonth + 1 > 11 ? 0 : currentMonth + 1;
+    const y = currentMonth + 1 > 11 ? currentYear + 1 : currentYear;
+    const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    html += calCell(d, ds, true, todayStr);
+  }
+
+  html += '</div>';
+  grid.innerHTML = html;
+}
+
+function calCell(d, ds, otherMonth, todayStr, data) {
+  const isToday    = ds === todayStr;
+  const isSelected = ds === calSelectedDate;
+  const dow = new Date(ds).getDay(); // 0=Sun, 6=Sat
+  const dowClass = dow===0 ? 'sun' : dow===6 ? 'sat' : '';
+  let classes = 'cal-cell';
+  if (otherMonth) classes += ' other-month';
+  if (isToday)    classes += ' today';
+  if (isSelected) classes += ' cal-selected';
+
+  let amountsHtml = '';
+  if (data) {
+    if (data.income > 0)  amountsHtml += `<div class="cal-amt income">+${fmtShort(data.income)}</div>`;
+    if (data.expense > 0) amountsHtml += `<div class="cal-amt expense">-${fmtShort(data.expense)}</div>`;
+  }
+
+  return `<div class="${classes}" onclick="calDayClick('${ds}')">
+    <div class="cal-day-num ${dowClass}">${d}</div>
+    <div class="cal-amounts">${amountsHtml}</div>
+  </div>`;
+}
+
+function calDayClick(ds) {
+  if (calSelectedDate === ds) {
+    // deselect
+    calSelectedDate = null;
+  } else {
+    calSelectedDate = ds;
+    // sync month if clicking overflow cell
+    const d = new Date(ds);
+    if (d.getMonth() !== currentMonth || d.getFullYear() !== currentYear) {
+      currentMonth = d.getMonth();
+      currentYear  = d.getFullYear();
+      updateMonthLabel();
+    }
+  }
+  renderCalendarView();
+}
+
+// Short number formatter for calendar cells
+function fmtShort(n) {
+  if (n >= 10000) return (n/10000).toFixed(1).replace(/\.0$/,'') + 'w';
+  if (n >= 1000)  return (n/1000).toFixed(1).replace(/\.0$/,'') + 'k';
+  return String(Math.round(n));
+}
+
+// Shared tx list renderer
+function renderTxList(txs, list, emptyMsg) {
   if (!txs.length) {
-    list.innerHTML = '<div class="empty"><div class="icon">📋</div><p>這個月還沒有記帳喔<br>點 + 新增第一筆</p></div>';
+    list.innerHTML = `<div class="empty"><div class="icon">📋</div><p>${emptyMsg}</p></div>`;
   } else {
     const sorted = [...txs].sort((a,b)=>new Date(b.date)-new Date(a.date));
     list.innerHTML = sorted.map(t => {
-      const cat = findCat(t.cat, t.type);
-      const accName = t.accountId ? (accounts.find(a=>a.id===t.accountId)?.name || '') : (t.fromId ? '轉帳' : '');
+      const cat     = findCat(t.cat);
+      const accName = t.accountId ? (accounts.find(a=>a.id===t.accountId)?.name||'') : (t.fromId?'轉帳':'');
       const accBadge = accName ? `<span class="acc-badge">🏦 ${accName}</span>` : '';
       const sign = t.type==='income' ? '+' : t.type==='transfer' ? '⇄' : '-';
       return `<div class="tx-item" onclick="editTx('${t.id}')">
@@ -908,8 +1247,6 @@ function renderAll() {
       </div>`;
     }).join('');
   }
-  renderCharts();
-  checkBudgetWarnings();
 }
 
 function catColor(type) {
