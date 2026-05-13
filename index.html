@@ -466,6 +466,39 @@
     .donut-wrap { flex-direction: column; align-items: flex-start; }
   }
 
+  /* ═══ PROFILE SECTION ═══ */
+  .profile-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px 18px; margin-bottom: 8px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .profile-avatar {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem; flex-shrink: 0; font-weight: 700; color: #fff;
+    letter-spacing: -.5px;
+  }
+  .profile-info { flex: 1; min-width: 0; }
+  .profile-name { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .profile-email { font-size: .75rem; color: var(--text3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .profile-edit-btn {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text2); border-radius: 8px; padding: 6px 12px;
+    font-size: .78rem; font-weight: 600; font-family: 'DM Sans'; cursor: pointer;
+    transition: .15s; white-space: nowrap; flex-shrink: 0;
+  }
+  .profile-edit-btn:hover { border-color: var(--border2); color: var(--text); }
+
+  .pwd-toggle { position: relative; }
+  .pwd-toggle .form-input { padding-right: 42px; }
+  .pwd-eye {
+    position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; color: var(--text3); cursor: pointer;
+    display: flex; align-items: center; padding: 2px;
+  }
+  .pwd-eye:hover { color: var(--text2); }
+
   /* ═══ GOALS PAGE ═══ */
   .goal-card {
     background: var(--surface); border: 1px solid var(--border);
@@ -575,7 +608,10 @@
         <div class="hamburger" onclick="openDrawer()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
         </div>
-        <h2>總覽</h2>
+        <div style="flex:1;min-width:0">
+          <h2 id="dashboard-greeting" style="font-size:1.1rem;line-height:1.2">總覽</h2>
+          <div id="dashboard-sub" style="font-size:.72rem;color:var(--text3);margin-top:1px;display:none"></div>
+        </div>
         <div class="month-nav">
           <button onclick="changeMonth(-1)">&#8249;</button>
           <span class="month-label" id="monthLabel" onclick="goToCurrentMonth()" title="回到本月"></span>
@@ -848,6 +884,18 @@
         <h2>設定</h2>
       </div>
       <div class="inner-content">
+        <!-- 個人資料 -->
+        <div class="settings-section">
+          <h3>個人資料</h3>
+          <div class="profile-card" id="profile-card">
+            <div class="profile-avatar" id="profile-avatar">👤</div>
+            <div class="profile-info">
+              <div class="profile-name" id="profile-display-name">尚未設定</div>
+              <div class="profile-email" id="profile-display-email">點擊編輯以設定個人資料</div>
+            </div>
+            <button class="profile-edit-btn" onclick="openProfileModal()">編輯</button>
+          </div>
+        </div>
         <div class="settings-section">
           <h3>顯示</h3>
           <div class="settings-item">
@@ -1252,6 +1300,40 @@
     <div style="display:flex;gap:10px">
       <button class="btn-secondary" onclick="closeModal('qrModal');openTxModal()">取消</button>
       <button class="btn-primary" onclick="applyInvoice()" style="flex:1">套用</button>
+    </div>
+  </div>
+</div>
+
+<!-- Profile Modal -->
+<div class="modal-overlay" id="profileModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">個人資料</div>
+    <div class="form-group">
+      <label class="form-label">姓名 / 暱稱</label>
+      <input class="form-input" id="profile-name" placeholder="請輸入您的名字">
+    </div>
+    <div class="form-group">
+      <label class="form-label">生日</label>
+      <input class="form-input" id="profile-birthday" type="date">
+    </div>
+    <div class="form-group">
+      <label class="form-label">登入信箱</label>
+      <input class="form-input" id="profile-email" type="email" placeholder="example@email.com">
+    </div>
+    <div class="form-group">
+      <label class="form-label">登入密碼</label>
+      <div class="pwd-toggle">
+        <input class="form-input" id="profile-password" type="password" placeholder="留空則不修改密碼">
+        <button class="pwd-eye" type="button" onclick="togglePwdVisibility('profile-password', this)" title="顯示/隱藏密碼">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="eye-icon-profile-password"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+      <div style="font-size:.72rem;color:var(--text3);margin-top:5px">密碼僅儲存於本機，不會上傳至任何伺服器</div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:4px">
+      <button class="btn-secondary" onclick="closeModal('profileModal')">取消</button>
+      <button class="btn-primary" style="margin-top:0" onclick="saveProfile()">儲存</button>
     </div>
   </div>
 </div>
@@ -2996,11 +3078,117 @@ function renderThemeGrid(catId) {
 
 
 // ═══════════════════════════
+// PROFILE
+// ═══════════════════════════
+let profile = DB.get('profile') || { name: '', birthday: '', email: '', password: '' };
+
+function saveProfileData() { DB.set('profile', profile); }
+
+function getInitials(name) {
+  if (!name) return '👤';
+  const trimmed = name.trim();
+  // If CJK characters, take first 2; otherwise initials
+  const cjk = trimmed.match(/[\u4e00-\u9fff\u3040-\u30ff]/g);
+  if (cjk && cjk.length > 0) return trimmed.slice(0, Math.min(2, trimmed.length));
+  const parts = trimmed.split(/\s+/);
+  if (parts.length >= 2) return (parts[0][0] + parts[parts.length-1][0]).toUpperCase();
+  return trimmed.slice(0, 2).toUpperCase();
+}
+
+function getGreeting() {
+  const h = new Date().getHours();
+  if (h < 6)  return '深夜好';
+  if (h < 12) return '早安';
+  if (h < 14) return '午安';
+  if (h < 18) return '下午好';
+  if (h < 21) return '晚上好';
+  return '晚安';
+}
+
+function renderProfileCard() {
+  const name  = profile.name  || '尚未設定';
+  const email = profile.email || '點擊編輯以設定個人資料';
+  const initials = getInitials(profile.name);
+  const avatarEl = document.getElementById('profile-avatar');
+  const nameEl   = document.getElementById('profile-display-name');
+  const emailEl  = document.getElementById('profile-display-email');
+  if (avatarEl) avatarEl.textContent = initials;
+  if (nameEl)   nameEl.textContent   = name;
+  if (emailEl)  emailEl.textContent  = email;
+}
+
+function updateDashboardGreeting() {
+  const greetEl = document.getElementById('dashboard-greeting');
+  const subEl   = document.getElementById('dashboard-sub');
+  if (!greetEl) return;
+  if (profile.name) {
+    greetEl.textContent = `${getGreeting()}，${profile.name} 👋`;
+    if (subEl) {
+      subEl.style.display = 'block';
+      // show birthday greeting if today
+      if (profile.birthday) {
+        const today = new Date();
+        const bday  = new Date(profile.birthday);
+        if (bday.getMonth() === today.getMonth() && bday.getDate() === today.getDate()) {
+          subEl.textContent = '🎂 今天是你的生日，生日快樂！';
+        } else {
+          subEl.style.display = 'none';
+        }
+      } else {
+        subEl.style.display = 'none';
+      }
+    }
+  } else {
+    greetEl.textContent = '總覽';
+    if (subEl) subEl.style.display = 'none';
+  }
+}
+
+function openProfileModal() {
+  document.getElementById('profile-name').value     = profile.name     || '';
+  document.getElementById('profile-birthday').value = profile.birthday || '';
+  document.getElementById('profile-email').value    = profile.email    || '';
+  document.getElementById('profile-password').value = '';
+  document.getElementById('profileModal').classList.add('open');
+}
+
+function saveProfile() {
+  const name     = document.getElementById('profile-name').value.trim();
+  const birthday = document.getElementById('profile-birthday').value;
+  const email    = document.getElementById('profile-email').value.trim();
+  const password = document.getElementById('profile-password').value;
+
+  profile.name     = name;
+  profile.birthday = birthday;
+  profile.email    = email;
+  if (password) profile.password = password;
+
+  saveProfileData();
+  closeModal('profileModal');
+  renderProfileCard();
+  updateDashboardGreeting();
+  showToast('✅ 個人資料已儲存');
+}
+
+function togglePwdVisibility(inputId, btn) {
+  const input = document.getElementById(inputId);
+  const icon  = document.getElementById('eye-icon-' + inputId);
+  if (input.type === 'password') {
+    input.type = 'text';
+    icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>';
+  } else {
+    input.type = 'password';
+    icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+  }
+}
+
+// ═══════════════════════════
 // SETTINGS
 // ═══════════════════════════
 function loadSettings() {
   document.getElementById('currency-select').value = settings.currency || 'TWD';
   document.getElementById('toggle-notif').className = 'toggle' + (settings.notif?' on':'');
+  renderProfileCard();
   showThemeCats();
 }
 function saveSetting(key,val) { settings[key]=val; save(); }
@@ -3046,6 +3234,7 @@ document.querySelectorAll('.modal-overlay').forEach(el=>{
   if (!dp.value) dp.value = localDateStr(new Date());
   const monthNavEl = document.querySelector('#page-dashboard .month-nav');
   if (monthNavEl) monthNavEl.style.visibility = 'hidden';
+  updateDashboardGreeting();
   renderAll();
   renderAccounts();
   renderBudget();
