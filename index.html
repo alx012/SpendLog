@@ -1739,10 +1739,33 @@ async function pushToSupabase() {
   try {
     const ops = [];
     // Always upsert all tables (even if empty) so deletions are reflected in cloud
-    ops.push(_sb.from('transactions').upsert(transactions.map(r=>({...r,user_id:uid_col})),{onConflict:'id'}));
+    // Map JS camelCase fields -> actual DB lowercase column names
+    ops.push(_sb.from('transactions').upsert(transactions.map(r=>({
+      id:        r.id,
+      user_id:   uid_col,
+      type:      r.type,
+      amount:    r.amount,
+      date:      r.date,
+      category:  r.cat,
+      payment:   r.payment,
+      note:      r.note,
+      accountid: r.accountId || null,
+      fromid:    r.fromId    || null,
+      toid:      r.toId      || null,
+    })),{onConflict:'id'}));
     ops.push(_sb.from('accounts').upsert(accounts.map(r=>({...r,user_id:uid_col})),{onConflict:'id'}));
     ops.push(_sb.from('budgets').upsert(budgets.map(r=>({...r,user_id:uid_col})),{onConflict:'id'}));
-    ops.push(_sb.from('recurring').upsert(recurring.map(r=>({...r,user_id:uid_col})),{onConflict:'id'}));
+    ops.push(_sb.from('recurring').upsert(recurring.map(r=>({
+      id:        r.id,
+      user_id:   uid_col,
+      name:      r.name,
+      type:      r.type,
+      amount:    r.amount,
+      category:  r.cat,
+      freq:      r.freq,
+      day:       r.day,
+      accountid: r.accountId || null,
+    })),{onConflict:'id'}));
     ops.push(_sb.from('goals').upsert(goals.map(r=>({...r,user_id:uid_col})),{onConflict:'id'}));
     // meta row — include rec_applied so recurring dedup state survives refresh
     ops.push(_sb.from('user_data').upsert({
@@ -1773,11 +1796,34 @@ async function pullFromSupabase() {
     _sb.from('goals').select('*').eq('user_id',uid_col),
     _sb.from('user_data').select('*').eq('user_id',uid_col).maybeSingle(),
   ]);
+  // Map DB lowercase columns -> JS camelCase fields used throughout the app
+  const stripTx = r => ({
+    id:        r.id,
+    type:      r.type,
+    amount:    r.amount,
+    date:      r.date,
+    cat:       r.category,
+    payment:   r.payment,
+    note:      r.note,
+    accountId: r.accountid || null,
+    fromId:    r.fromid    || null,
+    toId:      r.toid      || null,
+  });
+  const stripRec = r => ({
+    id:        r.id,
+    name:      r.name,
+    type:      r.type,
+    amount:    r.amount,
+    cat:       r.category,
+    freq:      r.freq,
+    day:       r.day,
+    accountId: r.accountid || null,
+  });
   const strip = r => { const {user_id,...rest}=r; return rest; };
-  if (txR.data)   transactions = txR.data.map(strip);
+  if (txR.data)   transactions = txR.data.map(stripTx);
   if (accR.data)  accounts     = accR.data.map(strip);
   if (budR.data)  budgets      = budR.data.map(strip);
-  if (recR.data)  recurring    = recR.data.map(strip);
+  if (recR.data)  recurring    = recR.data.map(stripRec);
   if (goalR.data) goals        = goalR.data.map(strip);
   if (metaR.data) {
     const m = metaR.data;
