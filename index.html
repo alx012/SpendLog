@@ -688,6 +688,62 @@
     background: linear-gradient(90deg, var(--accent), var(--teal), var(--accent));
     background-size: 200% 100%; animation: shimmer 2s linear infinite;
   }
+  /* ═══ INVESTMENT PAGE ═══ */
+  .invest-summary-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  @media(min-width:560px) { .invest-summary-row { grid-template-columns: repeat(4,1fr); } }
+  .invest-sum-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 12px; position: relative; overflow: hidden; }
+  .invest-sum-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: var(--radius) var(--radius) 0 0; }
+  .invest-sum-card.cost-card::before { background: var(--accent); }
+  .invest-sum-card.value-card::before { background: var(--teal); }
+  .invest-sum-card.pnl-card::before { background: var(--green); }
+  .invest-sum-card.pct-card::before { background: var(--yellow); }
+  .invest-sum-card .isc-label { font-size: .7rem; color: var(--text3); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .invest-sum-card .isc-val { font-size: clamp(.85rem, 3.5vw, 1.1rem); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .invest-sum-card.cost-card .isc-val { color: var(--accent2); }
+  .invest-sum-card.value-card .isc-val { color: var(--teal); }
+  .invest-sum-card.pnl-card .isc-val { color: var(--green); }
+  .invest-sum-card.pct-card .isc-val { color: var(--yellow); }
+
+  .invest-list { display: flex; flex-direction: column; gap: 8px; }
+  .invest-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; cursor: pointer; transition: .15s; }
+  .invest-item:hover { background: var(--surface2); border-color: var(--border2); }
+  .invest-item-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .invest-symbol-badge { display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; width: 46px; height: 46px; flex-shrink: 0; }
+  .invest-symbol-badge .sym { font-size: .72rem; font-weight: 700; color: var(--accent2); letter-spacing: .03em; line-height: 1; }
+  .invest-symbol-badge .mkt { font-size: .58rem; color: var(--text3); line-height: 1; margin-top: 2px; }
+  .invest-item-info { flex: 1; min-width: 0; }
+  .invest-item-name { font-size: .88rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .invest-item-meta { font-size: .72rem; color: var(--text3); margin-top: 2px; }
+  .invest-item-pnl { text-align: right; flex-shrink: 0; }
+  .invest-item-pnl .pnl-amt { font-size: .95rem; font-weight: 700; }
+  .invest-item-pnl .pnl-pct { font-size: .72rem; font-weight: 600; margin-top: 2px; }
+  .invest-item-pnl.gain .pnl-amt { color: var(--green); }
+  .invest-item-pnl.gain .pnl-pct { color: var(--green); }
+  .invest-item-pnl.loss .pnl-amt { color: var(--red); }
+  .invest-item-pnl.loss .pnl-pct { color: var(--red); }
+  .invest-item-pnl.neutral .pnl-amt { color: var(--text2); }
+  .invest-item-pnl.neutral .pnl-pct { color: var(--text3); }
+  .invest-item-prices { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-top: 6px; }
+  .invest-price-chip { background: var(--surface2); border-radius: 8px; padding: 7px 8px; }
+  .invest-price-chip .ipc-label { font-size: .6rem; color: var(--text3); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px; }
+  .invest-price-chip .ipc-val { font-size: .82rem; font-weight: 600; color: var(--text); }
+  .invest-loading-spinner { display: flex; align-items: center; gap: 6px; font-size: .78rem; color: var(--text3); padding: 6px 0; }
+  .invest-loading-spinner svg { animation: spin 1s linear infinite; flex-shrink: 0; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .invest-price-error { font-size: .72rem; color: var(--red); padding: 4px 0; }
+  .invest-price-fresh { font-size: .7rem; color: var(--text3); margin-top: 6px; }
+
+  .invest-market-badge { display: inline-flex; align-items: center; gap: 3px; border-radius: 5px; padding: 1px 5px; font-size: .62rem; font-weight: 700; letter-spacing: .04em; }
+  .invest-market-badge.tw { background: rgba(52,211,153,.12); color: var(--green); }
+  .invest-market-badge.us { background: rgba(124,106,255,.12); color: var(--accent2); }
+
+  /* Add Investment Modal */
+  .invest-modal-tabs { display: flex; background: var(--surface2); border-radius: 10px; padding: 3px; gap: 3px; margin-bottom: 18px; }
+  .invest-tab-btn { flex: 1; padding: 8px; border-radius: 8px; border: none; background: transparent; color: var(--text3); font-size: .82rem; font-weight: 600; cursor: pointer; transition: .15s; font-family: 'DM Sans'; }
+  .invest-tab-btn.active { background: var(--surface3); color: var(--text); }
+  .invest-tab-btn.us.active { color: var(--accent2); }
+  .invest-tab-btn.tw.active { color: var(--green); }
+
   @keyframes shimmer { 0% { background-position: 0% 0; } 100% { background-position: 200% 0; } }
   @keyframes popBounce { 0% { transform: scale(0); } 60% { transform: scale(1.15); } 80% { transform: scale(0.92); } 100% { transform: scale(1); } }
   .ach-popup-sparkle { font-size: 2rem; margin-bottom: 4px; }
@@ -822,6 +878,20 @@
           <div class="sidebar-nav-item" onclick="showPage('annual',this)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/></svg>
             年度
+          </div>
+        </div>
+      </div>
+
+      <!-- 投資理財 -->
+      <div class="sidebar-group open" id="sg-invest">
+        <div class="sidebar-group-header" onclick="toggleSidebarGroup('sg-invest')">
+          <span class="sg-label">投資理財</span>
+          <svg class="sg-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="sidebar-group-items">
+          <div class="sidebar-nav-item" onclick="showPage('investments',this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+            股票投資組合
           </div>
         </div>
       </div>
@@ -1195,6 +1265,51 @@
       </div>
     </div>
 
+    <!-- INVESTMENTS -->
+    <div class="page" id="page-investments">
+      <div class="top-bar" style="padding-bottom:16px">
+        <div class="hamburger" onclick="openDrawer()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </div>
+        <h2>投資組合</h2>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="btn-secondary" id="invest-refresh-btn" onclick="refreshInvestPrices()" style="padding:8px 12px;font-size:.8rem;display:flex;align-items:center;gap:6px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            刷新報價
+          </button>
+          <button class="btn-secondary" onclick="openInvestModal()" style="padding:8px 12px;font-size:.8rem">+ 新增</button>
+        </div>
+      </div>
+      <div class="inner-content">
+        <!-- Summary -->
+        <div class="invest-summary-row">
+          <div class="invest-sum-card cost-card">
+            <div class="isc-label">總投入成本</div>
+            <div class="isc-val" id="invest-total-cost">$0</div>
+          </div>
+          <div class="invest-sum-card value-card">
+            <div class="isc-label">目前市值</div>
+            <div class="isc-val" id="invest-total-value">—</div>
+          </div>
+          <div class="invest-sum-card pnl-card">
+            <div class="isc-label">總損益</div>
+            <div class="isc-val" id="invest-total-pnl">—</div>
+          </div>
+          <div class="invest-sum-card pct-card">
+            <div class="isc-label">報酬率</div>
+            <div class="isc-val" id="invest-total-pct">—</div>
+          </div>
+        </div>
+        <!-- Price time label -->
+        <div id="invest-price-time" style="font-size:.7rem;color:var(--text3);margin-bottom:12px;display:none"></div>
+        <!-- Holdings list -->
+        <div class="section-title">持股明細</div>
+        <div class="invest-list" id="invest-list">
+          <div class="empty"><div class="icon">📈</div><p>尚未新增任何持股<br>點擊「+ 新增」開始記錄</p></div>
+        </div>
+      </div>
+    </div>
+
     <!-- SETTINGS -->
     <div class="page" id="page-settings">
       <div class="top-bar" style="padding-bottom:16px">
@@ -1361,6 +1476,20 @@
       <div class="drawer-nav-item" id="dnav-annual" onclick="drawerNav('annual')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/></svg>
         年度
+      </div>
+    </div>
+  </div>
+
+  <!-- 投資理財群組 -->
+  <div class="drawer-group open" id="dg-invest">
+    <div class="drawer-group-header" onclick="toggleDrawerGroup('dg-invest')">
+      <span class="dg-label">投資理財</span>
+      <svg class="dg-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="drawer-group-items">
+      <div class="drawer-nav-item" id="dnav-investments" onclick="drawerNav('investments')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+        股票投資組合
       </div>
     </div>
   </div>
@@ -1716,7 +1845,63 @@
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
+<!-- Add Investment Modal -->
+<div class="modal-overlay" id="investModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div class="modal-title" style="margin:0" id="invest-modal-title">新增持股</div>
+      <button onclick="closeModal('investModal')" style="background:var(--surface2);border:1px solid var(--border);color:var(--text2);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center">✕</button>
+    </div>
+    <!-- Market tabs -->
+    <div class="invest-modal-tabs">
+      <button class="invest-tab-btn tw active" id="invest-mkt-tw" onclick="setInvestMarket('TW')">🇹🇼 台股</button>
+      <button class="invest-tab-btn us" id="invest-mkt-us" onclick="setInvestMarket('US')">🇺🇸 美股</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">股票代號 <span id="invest-sym-hint" style="color:var(--text3);font-weight:400">（例：2330）</span></label>
+      <input class="form-input" id="invest-symbol" placeholder="輸入代號..." style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
+    </div>
+    <div class="form-group">
+      <label class="form-label">股票名稱（選填）</label>
+      <input class="form-input" id="invest-name" placeholder="例：台積電">
+    </div>
+    <div class="grid-2">
+      <div class="form-group">
+        <label class="form-label" id="invest-shares-label">股數（股）</label>
+        <input class="form-input" type="number" id="invest-shares" placeholder="0" min="0" step="any">
+      </div>
+      <div class="form-group">
+        <label class="form-label">單位</label>
+        <select class="form-input form-select" id="invest-unit" onchange="updateInvestUnitLabel()">
+          <option value="share">股</option>
+          <option value="lot">張（1張=1000股）</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label" id="invest-price-label">買入均價（每股）</label>
+      <div class="amount-input-wrap">
+        <span class="currency" id="invest-currency-symbol">$</span>
+        <input class="form-input" type="number" id="invest-buy-price" placeholder="0" step="any">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">買入日期</label>
+      <input class="form-input" type="date" id="invest-buy-date">
+    </div>
+    <div class="form-group">
+      <label class="form-label">備註（選填）</label>
+      <input class="form-input" id="invest-note" placeholder="例：定期定額、長期持有...">
+    </div>
+    <button class="btn-primary" onclick="saveInvestment()">儲存持股</button>
+    <div id="invest-delete-wrap" style="display:none;margin-top:10px">
+      <button onclick="deleteInvestment()" style="width:100%;padding:10px;background:transparent;border:1px solid var(--red);color:var(--red);border-radius:var(--radius-sm);font-family:'DM Sans';font-size:.88rem;font-weight:500;cursor:pointer;">🗑 刪除這筆持股</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast2" style="display:none"></div>
 
 <script>
 // ═══════════════════════════════════════════════════════
@@ -1838,13 +2023,14 @@ async function pushToSupabase() {
 async function pullFromSupabase() {
   if (!currentUser) return;
   const uid_col = currentUser.id;
-  const [txR,accR,budR,recR,goalR,metaR] = await Promise.all([
+  const [txR,accR,budR,recR,goalR,metaR,invR] = await Promise.all([
     _sb.from('transactions').select('*').eq('user_id',uid_col),
     _sb.from('accounts').select('*').eq('user_id',uid_col),
     _sb.from('budgets').select('*').eq('user_id',uid_col),
     _sb.from('recurring').select('*').eq('user_id',uid_col),
     _sb.from('goals').select('*').eq('user_id',uid_col),
     _sb.from('user_data').select('*').eq('user_id',uid_col).maybeSingle(),
+    _sb.from('investments').select('*').eq('user_id',uid_col),
   ]);
   // Map DB lowercase columns -> JS camelCase fields used throughout the app
   const stripTx = r => ({
@@ -1898,6 +2084,10 @@ async function pullFromSupabase() {
   DB.set('txs',transactions); DB.set('accounts',accounts); DB.set('budgets',budgets);
   DB.set('recurring',recurring); DB.set('goals',goals); DB.set('settings',settings);
   DB.set('profile',profile); DB.set('achData',achData);
+  if (invR && invR.data) {
+    investments = invR.data.map(r => { const { user_id, ...rest } = r; return rest; });
+    DB.set('investments', investments);
+  }
 }
 
 // ── Merge local data into Supabase (on first login) ───
@@ -2036,6 +2226,7 @@ async function onLoginSuccess(isNewAccount) {
   renderRecurring();
   renderGoals();
   renderAchievements();
+  renderInvestments();
   loadSettings();
   updateDashboardGreeting();
   setSyncBadge('ok');
@@ -2084,6 +2275,7 @@ function updateAccountSection() {
     applyRecurring();
     renderAll(); renderAccounts(); renderBudget();
     renderRecurring(); renderGoals(); renderAchievements();
+    renderInvestments();
     loadSettings(); updateDashboardGreeting();
     setSyncBadge('ok');
   } else {
@@ -4474,6 +4666,253 @@ function setAchTab(cat) {
   achActiveTab = cat;
   renderAchievements();
 }
+
+// ═══════════════════════════════════════════════════════
+// INVESTMENTS  — 股票投資組合
+// ═══════════════════════════════════════════════════════
+let investments = DB.get('investments') || [];
+let investPriceCache = {};
+let _investEditId = null;
+let _investMarket = 'TW';
+
+async function pullInvestments() {
+  if (!currentUser) return;
+  const { data } = await _sb.from('investments').select('*').eq('user_id', currentUser.id);
+  if (data) {
+    investments = data.map(r => { const { user_id, ...rest } = r; return rest; });
+    DB.set('investments', investments);
+  }
+}
+
+async function pushInvestments() {
+  if (!currentUser) return;
+  try {
+    await _sb.from('investments').upsert(
+      investments.map(r => ({ ...r, user_id: currentUser.id })),
+      { onConflict: 'id' }
+    );
+  } catch(e) { console.error('investments push error', e); }
+}
+
+async function sbDeleteInvestment(id) {
+  if (!currentUser) return;
+  await _sb.from('investments').delete().eq('id', id).eq('user_id', currentUser.id);
+}
+
+function saveInvestmentsLocal() {
+  DB.set('investments', investments);
+  if (currentUser) pushInvestments();
+}
+
+async function fetchYahooPrice(symbol) {
+  const cached = investPriceCache[symbol];
+  if (cached && cached.price != null && (Date.now() - cached.ts) < 15 * 60 * 1000) return cached;
+  const ticker = symbol.match(/^\d{4,}$/) ? symbol + '.TW' : symbol;
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=1d`;
+  try {
+    const resp = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const json = await resp.json();
+    const meta = json?.chart?.result?.[0]?.meta;
+    if (!meta) throw new Error('No data');
+    const price = meta.regularMarketPrice ?? meta.previousClose;
+    const currency = meta.currency || (symbol.match(/^\d{4,}$/) ? 'TWD' : 'USD');
+    const result = { price, currency, ts: Date.now() };
+    investPriceCache[symbol] = result;
+    return result;
+  } catch(e) {
+    console.warn('Yahoo price fetch failed for', symbol, e);
+    investPriceCache[symbol] = null;
+    return null;
+  }
+}
+
+function fmtInvestAmt(n, currency) {
+  if (n == null || isNaN(n)) return '—';
+  if (currency === 'USD') return (n >= 0 ? '' : '-') + 'US$' + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return (n >= 0 ? '' : '-') + '$' + Math.abs(n).toLocaleString('zh-TW', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+
+function getShareCount(inv) {
+  return inv.unit === 'lot' ? (inv.shares * 1000) : parseFloat(inv.shares);
+}
+
+function renderInvestments() {
+  const list = document.getElementById('invest-list');
+  if (!list) return;
+  if (investments.length === 0) {
+    list.innerHTML = '<div class="empty"><div class="icon">📈</div><p>尚未新增任何持股<br>點擊「+ 新增」開始記錄</p></div>';
+    document.getElementById('invest-total-cost').textContent = '$0';
+    ['invest-total-value','invest-total-pnl','invest-total-pct'].forEach(id => { document.getElementById(id).textContent = '—'; });
+    return;
+  }
+  let totalCost = 0, totalValue = 0, allPriced = true, pricedCount = 0;
+  list.innerHTML = investments.map(inv => {
+    const shares = getShareCount(inv);
+    const isUSD = inv.market === 'US';
+    const currency = isUSD ? 'USD' : 'TWD';
+    const cost = shares * parseFloat(inv.buy_price);
+    totalCost += cost;
+    const pc = investPriceCache[inv.symbol];
+    let priceHtml = '', pnlSection = '';
+    if (pc && pc.price != null) {
+      const curVal = shares * pc.price;
+      totalValue += curVal; pricedCount++;
+      const pnl = curVal - cost;
+      const pct = cost > 0 ? (pnl / cost * 100) : 0;
+      const cls = pnl > 0 ? 'gain' : pnl < 0 ? 'loss' : 'neutral';
+      const sign = pnl > 0 ? '+' : '';
+      pnlSection = `<div class="invest-item-pnl ${cls}"><div class="pnl-amt">${sign}${fmtInvestAmt(pnl, currency)}</div><div class="pnl-pct">${sign}${pct.toFixed(2)}%</div></div>`;
+      priceHtml = `<div class="invest-item-prices">
+        <div class="invest-price-chip"><div class="ipc-label">買入均價</div><div class="ipc-val">${fmtInvestAmt(parseFloat(inv.buy_price), currency)}</div></div>
+        <div class="invest-price-chip"><div class="ipc-label">現價</div><div class="ipc-val" style="color:var(--teal)">${fmtInvestAmt(pc.price, currency)}</div></div>
+        <div class="invest-price-chip"><div class="ipc-label">市值</div><div class="ipc-val">${fmtInvestAmt(curVal, currency)}</div></div>
+      </div>`;
+    } else if (pc === null) {
+      allPriced = false;
+      pnlSection = `<div class="invest-item-pnl neutral"><div class="pnl-amt" style="font-size:.72rem;color:var(--red)">取得失敗</div></div>`;
+      priceHtml = `<div class="invest-price-error">⚠ 無法取得報價，請確認代號是否正確</div>`;
+    } else {
+      allPriced = false;
+      pnlSection = `<div class="invest-loading-spinner"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>載入中...</div>`;
+    }
+    const sharesLabel = inv.unit === 'lot' ? `${inv.shares} 張 (${shares.toLocaleString()} 股)` : `${parseFloat(inv.shares).toLocaleString()} 股`;
+    const mktBadge = inv.market === 'US' ? `<span class="invest-market-badge us">🇺🇸 美股</span>` : `<span class="invest-market-badge tw">🇹🇼 台股</span>`;
+    return `<div class="invest-item" onclick="openInvestModal('${inv.id}')">
+      <div class="invest-item-head">
+        <div class="invest-symbol-badge"><span class="sym">${inv.symbol}</span><span class="mkt">${inv.market}</span></div>
+        <div class="invest-item-info">
+          <div class="invest-item-name">${inv.name || inv.symbol} ${mktBadge}</div>
+          <div class="invest-item-meta">${sharesLabel} · 成本 ${fmtInvestAmt(cost, currency)} · ${inv.buy_date || '—'}</div>
+        </div>
+        ${pnlSection}
+      </div>${priceHtml}
+    </div>`;
+  }).join('');
+
+  document.getElementById('invest-total-cost').textContent = fmtInvestAmt(totalCost, 'TWD');
+  if (pricedCount > 0) {
+    const pnl = totalValue - totalCost;
+    const pct = totalCost > 0 ? (pnl / totalCost * 100) : 0;
+    const sign = pnl >= 0 ? '+' : '';
+    document.getElementById('invest-total-value').textContent = fmtInvestAmt(totalValue, 'TWD');
+    document.getElementById('invest-total-pnl').textContent = sign + fmtInvestAmt(pnl, 'TWD');
+    document.getElementById('invest-total-pct').textContent = sign + pct.toFixed(2) + '%';
+    document.getElementById('invest-total-pnl').style.color = pnl >= 0 ? 'var(--green)' : 'var(--red)';
+    document.getElementById('invest-total-pct').style.color = pnl >= 0 ? 'var(--yellow)' : 'var(--red)';
+  } else {
+    document.getElementById('invest-total-value').textContent = '載入中...';
+  }
+}
+
+async function refreshInvestPrices() {
+  if (investments.length === 0) return;
+  const btn = document.getElementById('invest-refresh-btn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin 1s linear infinite"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> 更新中...'; }
+  const symbols = [...new Set(investments.map(i => i.symbol))];
+  // Clear cache to force refresh
+  symbols.forEach(s => { investPriceCache[s] = undefined; });
+  renderInvestments(); // show spinners
+  await Promise.all(symbols.map(s => fetchYahooPrice(s)));
+  const timeEl = document.getElementById('invest-price-time');
+  if (timeEl) { timeEl.textContent = `報價更新時間：${new Date().toLocaleTimeString('zh-TW')}（Yahoo Finance，延遲約 15 分鐘）`; timeEl.style.display = 'block'; }
+  renderInvestments();
+  if (btn) { btn.disabled = false; btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> 刷新報價'; }
+}
+
+function setInvestMarket(mkt) {
+  _investMarket = mkt;
+  document.getElementById('invest-mkt-tw').classList.toggle('active', mkt === 'TW');
+  document.getElementById('invest-mkt-us').classList.toggle('active', mkt === 'US');
+  document.getElementById('invest-sym-hint').textContent = mkt === 'TW' ? '（例：2330、0050）' : '（例：AAPL、NVDA、SPY）';
+  document.getElementById('invest-currency-symbol').textContent = mkt === 'US' ? 'US$' : '$';
+  document.getElementById('invest-price-label').textContent = mkt === 'US' ? '買入均價（每股，USD）' : '買入均價（每股，TWD）';
+  updateInvestUnitLabel();
+}
+
+function updateInvestUnitLabel() {
+  const unit = document.getElementById('invest-unit').value;
+  document.getElementById('invest-shares-label').textContent = unit === 'lot' ? '張數（1張=1000股）' : '股數（股）';
+}
+
+function openInvestModal(editId) {
+  _investEditId = editId || null;
+  const today = new Date().toISOString().slice(0, 10);
+  if (editId) {
+    const inv = investments.find(i => i.id === editId);
+    if (!inv) return;
+    document.getElementById('invest-modal-title').textContent = '編輯持股';
+    setInvestMarket(inv.market || 'TW');
+    document.getElementById('invest-symbol').value = inv.symbol;
+    document.getElementById('invest-name').value = inv.name || '';
+    document.getElementById('invest-shares').value = inv.shares;
+    document.getElementById('invest-unit').value = inv.unit || 'share';
+    document.getElementById('invest-buy-price').value = inv.buy_price;
+    document.getElementById('invest-buy-date').value = inv.buy_date || today;
+    document.getElementById('invest-note').value = inv.note || '';
+    document.getElementById('invest-delete-wrap').style.display = 'block';
+  } else {
+    document.getElementById('invest-modal-title').textContent = '新增持股';
+    setInvestMarket('TW');
+    ['invest-symbol','invest-name','invest-shares','invest-buy-price','invest-note'].forEach(id => { document.getElementById(id).value = ''; });
+    document.getElementById('invest-unit').value = 'share';
+    document.getElementById('invest-buy-date').value = today;
+    document.getElementById('invest-delete-wrap').style.display = 'none';
+  }
+  updateInvestUnitLabel();
+  document.getElementById('investModal').classList.add('open');
+}
+
+function saveInvestment() {
+  const symbol = document.getElementById('invest-symbol').value.trim().toUpperCase();
+  const name = document.getElementById('invest-name').value.trim();
+  const shares = parseFloat(document.getElementById('invest-shares').value);
+  const unit = document.getElementById('invest-unit').value;
+  const buyPrice = parseFloat(document.getElementById('invest-buy-price').value);
+  const buyDate = document.getElementById('invest-buy-date').value;
+  const note = document.getElementById('invest-note').value.trim();
+  if (!symbol) { showToast('請輸入股票代號'); return; }
+  if (isNaN(shares) || shares <= 0) { showToast('請輸入有效股數'); return; }
+  if (isNaN(buyPrice) || buyPrice <= 0) { showToast('請輸入有效買入價格'); return; }
+  if (_investEditId) {
+    const idx = investments.findIndex(i => i.id === _investEditId);
+    if (idx !== -1) investments[idx] = { ...investments[idx], symbol, market: _investMarket, name, shares, unit, buy_price: buyPrice, buy_date: buyDate, note };
+  } else {
+    investments.push({ id: uid(), symbol, market: _investMarket, name, shares, unit, buy_price: buyPrice, buy_date: buyDate, note, created_at: new Date().toISOString() });
+  }
+  saveInvestmentsLocal();
+  closeModal('investModal');
+  if (!investPriceCache[symbol]) {
+    fetchYahooPrice(symbol).then(() => renderInvestments());
+  } else { renderInvestments(); }
+  showToast(_investEditId ? '持股已更新' : '持股已新增');
+}
+
+function deleteInvestment() {
+  if (!_investEditId) return;
+  if (!confirm('確定要刪除這筆持股記錄嗎？')) return;
+  sbDeleteInvestment(_investEditId);
+  investments = investments.filter(i => i.id !== _investEditId);
+  saveInvestmentsLocal();
+  closeModal('investModal');
+  renderInvestments();
+  showToast('持股已刪除');
+}
+
+// Patch showPage to auto-fetch prices on entering investments page
+setTimeout(() => {
+  const origShowPage = window.showPage;
+  if (origShowPage) {
+    window.showPage = function(page, el, fromNav) {
+      origShowPage.call(this, page, el, fromNav);
+      if (page === 'investments') {
+        renderInvestments();
+        const uncached = [...new Set(investments.map(i => i.symbol))].filter(s => investPriceCache[s] === undefined);
+        if (uncached.length > 0) refreshInvestPrices();
+      }
+    };
+  }
+}, 0);
 
 // ═══════════════════════════
 // CLOSE ON OVERLAY CLICK
