@@ -1946,19 +1946,36 @@
       <button onclick="closeModal('sellModal')" style="background:var(--surface2);border:1px solid var(--border);color:var(--text2);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center">✕</button>
     </div>
     <div style="font-size:.75rem;color:var(--text3);margin-bottom:16px">記錄賣出交易，系統自動計算已實現損益</div>
-    <!-- Market tabs -->
-    <div class="invest-modal-tabs">
+
+    <!-- NEW: Pick from existing holdings -->
+    <div class="form-group" id="sell-holding-picker-wrap">
+      <label class="form-label">選擇持股 <span style="color:var(--text3);font-weight:400">（從目前持有的股票中選擇）</span></label>
+      <select class="form-input form-select" id="sell-holding-picker" onchange="onSellHoldingPicked()">
+        <option value="">── 選擇股票 ──</option>
+      </select>
+    </div>
+
+    <!-- Hidden fields used for logic; not shown to user when picking from dropdown -->
+    <input type="hidden" id="sell-symbol">
+    <input type="hidden" id="sell-name">
+    <input type="hidden" id="sell-market-hidden">
+
+    <!-- Holding info card shown after picking -->
+    <div id="sell-holding-info" style="display:none;background:var(--surface2);border-radius:10px;padding:12px 14px;margin-bottom:14px">
+      <div id="sell-holding-info-content"></div>
+    </div>
+
+    <!-- Market tabs — only shown in edit mode for existing records without holdings -->
+    <div class="invest-modal-tabs" id="sell-mkt-tabs" style="display:none">
       <button class="invest-tab-btn tw active" id="sell-mkt-tw" onclick="setSellMarket('TW')">🇹🇼 台股</button>
       <button class="invest-tab-btn us" id="sell-mkt-us" onclick="setSellMarket('US')">🇺🇸 美股</button>
     </div>
-    <div class="form-group">
+    <!-- sym hint for edit mode -->
+    <div class="form-group" id="sell-symbol-edit-wrap" style="display:none">
       <label class="form-label">股票代號 <span id="sell-sym-hint" style="color:var(--text3);font-weight:400">（例：2330）</span></label>
-      <input class="form-input" id="sell-symbol" placeholder="輸入代號..." style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();updateSellCostHint()">
+      <input class="form-input" id="sell-symbol-edit" placeholder="輸入代號..." style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();document.getElementById('sell-symbol').value=this.value;updateSellCostHint()">
     </div>
-    <div class="form-group">
-      <label class="form-label">股票名稱（選填）</label>
-      <input class="form-input" id="sell-name" placeholder="例：台積電">
-    </div>
+
     <div class="grid-2">
       <div class="form-group">
         <label class="form-label" id="sell-shares-label">賣出股數（股）</label>
@@ -1973,27 +1990,32 @@
       </div>
     </div>
     <div class="form-group">
-      <label class="form-label" id="sell-price-label">賣出均價（每股）</label>
+      <label class="form-label" id="sell-price-label">賣出價格（每股）</label>
       <div class="amount-input-wrap">
         <span class="currency" id="sell-currency-symbol">$</span>
-        <input class="form-input" type="number" id="sell-price" placeholder="0" step="any" oninput="updateSellCostHint()">
+        <input class="form-input" type="number" id="sell-price" placeholder="請手動輸入賣出價格" step="any" oninput="updateSellCostHint()">
       </div>
     </div>
     <!-- Cost hint from holdings -->
-    <div id="sell-cost-hint" style="background:var(--surface2);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:.78rem;color:var(--text2);display:none">
+    <div id="sell-cost-hint" style="background:rgba(124,106,255,.08);border:1px solid rgba(124,106,255,.2);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:.78rem;color:var(--text2);display:none">
       <div id="sell-cost-hint-content"></div>
     </div>
     <div class="form-group">
       <label class="form-label">賣出日期</label>
       <input class="form-input" type="date" id="sell-date">
     </div>
+    <!-- Hidden: buy price auto-filled from holdings -->
+    <input type="hidden" id="sell-buy-price">
+    <span id="sell-buy-currency" style="display:none"></span>
+
+    <!-- NEW: account to deposit proceeds into -->
     <div class="form-group">
-      <label class="form-label">買入均價（選填，留空則自動從持股記錄帶入）</label>
-      <div class="amount-input-wrap">
-        <span class="currency" id="sell-buy-currency">$</span>
-        <input class="form-input" type="number" id="sell-buy-price" placeholder="自動帶入" step="any">
-      </div>
+      <label class="form-label">賣出款項轉入帳戶 <span style="color:var(--text3);font-weight:400">（選填，將把賣出總金額存入該帳戶）</span></label>
+      <select class="form-input form-select" id="sell-to-account">
+        <option value="">── 不連結帳戶 ──</option>
+      </select>
     </div>
+
     <div class="form-group">
       <label class="form-label">備註（選填）</label>
       <input class="form-input" id="sell-note" placeholder="例：停利出場...">
@@ -2050,6 +2072,12 @@
     <div class="form-group">
       <label class="form-label">買入日期</label>
       <input class="form-input" type="date" id="invest-buy-date">
+    </div>
+    <div class="form-group">
+      <label class="form-label">從哪個帳戶支出 <span style="color:var(--text3);font-weight:400">（選填，將自動扣除買入金額）</span></label>
+      <select class="form-input form-select" id="invest-from-account">
+        <option value="">── 不連結帳戶 ──</option>
+      </select>
     </div>
     <div class="form-group">
       <label class="form-label">備註（選填）</label>
@@ -5126,6 +5154,7 @@ function openAddLotModal(symbol) {
   document.getElementById('invest-buy-date').value = today;
   document.getElementById('invest-note').value = '';
   document.getElementById('invest-delete-wrap').style.display = 'none';
+  populateAccountSelect('invest-from-account');
   updateInvestUnitLabel();
   document.getElementById('investModal').classList.add('open');
 }
@@ -5134,6 +5163,7 @@ function openAddLotModal(symbol) {
 function openInvestModal(editId) {
   _investEditId = editId || null;
   const today = new Date().toISOString().slice(0, 10);
+  populateAccountSelect('invest-from-account');
   if (editId) {
     const inv = investments.find(i => i.id === editId);
     if (!inv) return;
@@ -5148,6 +5178,7 @@ function openInvestModal(editId) {
     document.getElementById('invest-buy-date').value = inv.buy_date || today;
     document.getElementById('invest-note').value = inv.note || '';
     document.getElementById('invest-delete-wrap').style.display = 'block';
+    if (inv.fromAccountId) document.getElementById('invest-from-account').value = inv.fromAccountId;
   } else {
     // New lot (called from + 新增買入 button)
     document.getElementById('invest-modal-title').textContent = '新增買入記錄';
@@ -5157,6 +5188,7 @@ function openInvestModal(editId) {
     document.getElementById('invest-unit').value = 'share';
     document.getElementById('invest-buy-date').value = today;
     document.getElementById('invest-delete-wrap').style.display = 'none';
+    document.getElementById('invest-from-account').value = '';
   }
   updateInvestUnitLabel();
   document.getElementById('investModal').classList.add('open');
@@ -5170,34 +5202,68 @@ function saveInvestment() {
   const buyPrice = parseFloat(document.getElementById('invest-buy-price').value);
   const buyDate = document.getElementById('invest-buy-date').value;
   const note = document.getElementById('invest-note').value.trim();
+  const fromAccountId = document.getElementById('invest-from-account').value || null;
+
   if (!symbol) { showToast('請輸入股票代號'); return; }
   if (isNaN(shares) || shares <= 0) { showToast('請輸入有效股數'); return; }
   if (isNaN(buyPrice) || buyPrice <= 0) { showToast('請輸入有效買入價格'); return; }
+
+  const actualShares = unit === 'lot' ? shares * 1000 : shares;
+  const totalCost = buyPrice * actualShares;
+
   if (_investEditId) {
+    // Reverse old account deduction
+    const old = investments.find(i => i.id === _investEditId);
+    if (old?.fromAccountId) {
+      const oldAcc = accounts.find(a => a.id === old.fromAccountId);
+      const oldActualShares = old.unit === 'lot' ? old.shares * 1000 : old.shares;
+      if (oldAcc) oldAcc.balance += old.buy_price * oldActualShares;
+    }
     const idx = investments.findIndex(i => i.id === _investEditId);
-    if (idx !== -1) investments[idx] = { ...investments[idx], symbol, market: _investMarket, name, shares, unit, buy_price: buyPrice, buy_date: buyDate, note };
+    if (idx !== -1) investments[idx] = { ...investments[idx], symbol, market: _investMarket, name, shares, unit, buy_price: buyPrice, buy_date: buyDate, note, fromAccountId };
   } else {
-    investments.push({ id: uid(), symbol, market: _investMarket, name, shares, unit, buy_price: buyPrice, buy_date: buyDate, note, created_at: new Date().toISOString() });
+    investments.push({ id: uid(), symbol, market: _investMarket, name, shares, unit, buy_price: buyPrice, buy_date: buyDate, note, fromAccountId, created_at: new Date().toISOString() });
   }
+
+  // Deduct from source account
+  if (fromAccountId) {
+    const acc = accounts.find(a => a.id === fromAccountId);
+    if (acc) acc.balance -= totalCost;
+  }
+
+  save();
   saveInvestmentsLocal();
   closeModal('investModal');
+  renderAccounts();
+
   // Fetch price if new symbol
   const isNewSymbol = !investments.some(i => i.symbol === symbol && i.id !== _investEditId) || investPriceCache[symbol] === undefined;
   if (isNewSymbol || investPriceCache[symbol] === undefined) {
     fetchYahooPrice(symbol).then(() => renderInvestments());
     if (_investMarket === 'US' && !usdTwdRate) fetchUsdTwd().then(() => renderInvestments());
   } else { renderInvestments(); }
-  showToast(_investEditId ? '買入記錄已更新' : '買入記錄已新增');
+
+  const currency = _investMarket === 'US' ? 'USD' : 'TWD';
+  const costStr = fmtInvestAmt(totalCost, currency);
+  showToast(_investEditId ? '買入記錄已更新' : `✅ 買入已記錄，成本 ${costStr}`);
 }
 
 function deleteInvestment() {
   if (!_investEditId) return;
   const inv = investments.find(i => i.id === _investEditId);
   if (!confirm(`確定要刪除這筆買入記錄？\n${inv?.buy_date || ''} ${inv?.symbol || ''} ${inv?.shares}${inv?.unit === 'lot' ? '張' : '股'}`)) return;
+  // Reverse account deduction
+  if (inv?.fromAccountId) {
+    const acc = accounts.find(a => a.id === inv.fromAccountId);
+    const actualShares = inv.unit === 'lot' ? inv.shares * 1000 : inv.shares;
+    if (acc) acc.balance += inv.buy_price * actualShares;
+  }
   sbDeleteInvestment(_investEditId);
   investments = investments.filter(i => i.id !== _investEditId);
+  save();
   saveInvestmentsLocal();
   closeModal('investModal');
+  renderAccounts();
   renderInvestments();
   showToast('買入記錄已刪除');
 }
@@ -5234,12 +5300,14 @@ function saveSellsLocal() {
 
 function setSellMarket(mkt) {
   _sellMarket = mkt;
-  document.getElementById('sell-mkt-tw').classList.toggle('active', mkt === 'TW');
-  document.getElementById('sell-mkt-us').classList.toggle('active', mkt === 'US');
-  document.getElementById('sell-sym-hint').textContent = mkt === 'TW' ? '（例：2330、0050）' : '（例：AAPL、NVDA、SPY）';
+  const twBtn = document.getElementById('sell-mkt-tw');
+  const usBtn = document.getElementById('sell-mkt-us');
+  if (twBtn) twBtn.classList.toggle('active', mkt === 'TW');
+  if (usBtn) usBtn.classList.toggle('active', mkt === 'US');
+  const symHint = document.getElementById('sell-sym-hint');
+  if (symHint) symHint.textContent = mkt === 'TW' ? '（例：2330、0050）' : '（例：AAPL、NVDA、SPY）';
   document.getElementById('sell-currency-symbol').textContent = mkt === 'US' ? 'US$' : '$';
-  document.getElementById('sell-buy-currency').textContent = mkt === 'US' ? 'US$' : '$';
-  document.getElementById('sell-price-label').textContent = mkt === 'US' ? '賣出均價（每股，USD）' : '賣出均價（每股，TWD）';
+  document.getElementById('sell-price-label').textContent = mkt === 'US' ? '賣出價格（每股，USD）' : '賣出價格（每股，TWD）';
   updateSellSharesLabel();
   updateSellCostHint();
 }
@@ -5247,6 +5315,88 @@ function setSellMarket(mkt) {
 function updateSellSharesLabel() {
   const unit = document.getElementById('sell-unit').value;
   document.getElementById('sell-shares-label').textContent = unit === 'lot' ? '賣出張數（1張=1000股）' : '賣出股數（股）';
+}
+
+// Populate the holding picker dropdown with current holdings
+function populateSellHoldingPicker() {
+  const picker = document.getElementById('sell-holding-picker');
+  const groups = groupBySymbol();
+  picker.innerHTML = '<option value="">── 選擇股票 ──</option>' +
+    groups.map(g => {
+      const sharesStr = g.lots[0]?.unit === 'lot'
+        ? `${(g.totalShares/1000).toLocaleString()}張`
+        : `${g.totalShares.toLocaleString()}股`;
+      const mktFlag = g.market === 'US' ? '🇺🇸' : '🇹🇼';
+      const currency = g.market === 'US' ? 'USD' : 'TWD';
+      return `<option value="${g.symbol}" data-market="${g.market}" data-name="${g.name}" data-unit="${g.lots[0]?.unit||'share'}" data-avg="${g.avgPrice}" data-shares="${g.totalShares}">
+        ${mktFlag} ${g.symbol} ${g.name !== g.symbol ? '(' + g.name + ')' : ''} — 持有 ${sharesStr} 均價 ${fmtInvestAmt(g.avgPrice, currency)}
+      </option>`;
+    }).join('');
+}
+
+// Called when user picks a holding from the dropdown
+function onSellHoldingPicked() {
+  const picker = document.getElementById('sell-holding-picker');
+  const opt = picker.options[picker.selectedIndex];
+  const symbol = picker.value;
+
+  if (!symbol) {
+    document.getElementById('sell-holding-info').style.display = 'none';
+    document.getElementById('sell-cost-hint').style.display = 'none';
+    document.getElementById('sell-symbol').value = '';
+    document.getElementById('sell-name').value = '';
+    return;
+  }
+
+  const market = opt.dataset.market || 'TW';
+  const name = opt.dataset.name || symbol;
+  const avgPrice = parseFloat(opt.dataset.avg) || 0;
+  const totalShares = parseFloat(opt.dataset.shares) || 0;
+  const unit = opt.dataset.unit || 'share';
+  const currency = market === 'US' ? 'USD' : 'TWD';
+
+  // Set hidden fields
+  document.getElementById('sell-symbol').value = symbol;
+  document.getElementById('sell-name').value = name;
+  document.getElementById('sell-market-hidden').value = market;
+  _sellMarket = market;
+
+  // Update UI labels
+  document.getElementById('sell-currency-symbol').textContent = market === 'US' ? 'US$' : '$';
+  document.getElementById('sell-price-label').textContent = market === 'US' ? '賣出價格（每股，USD）' : '賣出價格（每股，TWD）';
+  document.getElementById('sell-unit').value = unit;
+  updateSellSharesLabel();
+
+  // Show holding info card
+  const sharesStr = unit === 'lot'
+    ? `${(totalShares/1000).toLocaleString()} 張（${totalShares.toLocaleString()} 股）`
+    : `${totalShares.toLocaleString()} 股`;
+  const mktFlag = market === 'US' ? '🇺🇸 美股' : '🇹🇼 台股';
+  document.getElementById('sell-holding-info-content').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div>
+        <span style="font-size:.95rem;font-weight:700;color:var(--text)">${symbol}</span>
+        <span style="font-size:.78rem;color:var(--text3);margin-left:6px">${name}</span>
+      </div>
+      <span class="invest-market-badge ${market==='US'?'us':'tw'}">${mktFlag}</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div style="background:var(--surface3);border-radius:7px;padding:8px 10px">
+        <div style="font-size:.6rem;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">持有數量</div>
+        <div style="font-size:.88rem;font-weight:600">${sharesStr}</div>
+      </div>
+      <div style="background:var(--surface3);border-radius:7px;padding:8px 10px">
+        <div style="font-size:.6rem;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">加權均價（成本）</div>
+        <div style="font-size:.88rem;font-weight:600;color:var(--accent2)">${fmtInvestAmt(avgPrice, currency)}</div>
+      </div>
+    </div>
+  `;
+  document.getElementById('sell-holding-info').style.display = 'block';
+
+  // Set buy price hidden field (for P&L calculation)
+  document.getElementById('sell-buy-price').value = avgPrice;
+
+  updateSellCostHint();
 }
 
 function updateSellCostHint() {
@@ -5258,41 +5408,54 @@ function updateSellCostHint() {
   const hintContent = document.getElementById('sell-cost-hint-content');
 
   const group = groupBySymbol().find(g => g.symbol === symbol);
-  if (!group) { hint.style.display = 'none'; return; }
+  if (!group && !sellPrice) { hint.style.display = 'none'; return; }
 
+  const avgPrice = group ? group.avgPrice : (parseFloat(document.getElementById('sell-buy-price').value) || 0);
   const actualShares = unit === 'lot' ? shares * 1000 : shares;
   const currency = _sellMarket === 'US' ? 'USD' : 'TWD';
 
-  let html = `<span style="color:var(--accent2);font-weight:600">${symbol}</span> 持有加權均價：<strong>${fmtInvestAmt(group.avgPrice, currency)}</strong>`;
-
-  if (!isNaN(actualShares) && !isNaN(sellPrice) && actualShares > 0 && sellPrice > 0) {
-    const cost = group.avgPrice * actualShares;
+  if (!isNaN(actualShares) && !isNaN(sellPrice) && actualShares > 0 && sellPrice > 0 && avgPrice > 0) {
+    const cost = avgPrice * actualShares;
     const rev = sellPrice * actualShares;
     const pnl = rev - cost;
     const pct = cost > 0 ? (pnl / cost * 100) : 0;
     const sign = pnl >= 0 ? '+' : '';
     const color = pnl >= 0 ? 'var(--green)' : 'var(--red)';
-    html += `<br>預計已實現損益：<strong style="color:${color}">${sign}${fmtInvestAmt(pnl, currency)}</strong> <span style="color:${color}">(${sign}${pct.toFixed(2)}%)</span>`;
-    // Auto-fill buy price
-    if (!document.getElementById('sell-buy-price').value) {
-      document.getElementById('sell-buy-price').placeholder = group.avgPrice.toFixed(2);
-    }
+    hintContent.innerHTML = `賣出總金額：<strong style="color:var(--teal)">${fmtInvestAmt(rev, currency)}</strong><br>預計已實現損益：<strong style="color:${color}">${sign}${fmtInvestAmt(pnl, currency)}</strong> <span style="color:${color}">(${sign}${pct.toFixed(2)}%)</span>`;
+    hint.style.display = 'block';
+  } else {
+    hint.style.display = 'none';
   }
+}
 
-  hintContent.innerHTML = html;
-  hint.style.display = 'block';
+function populateSellAccountSelect() {
+  const sel = document.getElementById('sell-to-account');
+  sel.innerHTML = '<option value="">── 不連結帳戶 ──</option>' +
+    accounts.map(a => `<option value="${a.id}">${a.name}（餘額 ${fmt(a.balance)}）</option>`).join('');
 }
 
 function openSellModal(editId) {
   _sellEditId = editId || null;
   const today = new Date().toISOString().slice(0, 10);
+
+  // Populate account selector
+  populateSellAccountSelect();
+
   if (editId) {
     const rec = sellRecords.find(r => r.id === editId);
     if (!rec) return;
     document.getElementById('sell-modal-title').textContent = '編輯賣出記錄';
+
+    // In edit mode: show market tabs + symbol text field for flexibility
+    document.getElementById('sell-holding-picker-wrap').style.display = 'none';
+    document.getElementById('sell-mkt-tabs').style.display = 'flex';
+    document.getElementById('sell-symbol-edit-wrap').style.display = 'block';
+    document.getElementById('sell-holding-info').style.display = 'none';
+
     setSellMarket(rec.market || 'TW');
     document.getElementById('sell-symbol').value = rec.symbol;
     document.getElementById('sell-name').value = rec.name || '';
+    document.getElementById('sell-symbol-edit').value = rec.symbol;
     document.getElementById('sell-shares').value = rec.shares;
     document.getElementById('sell-unit').value = rec.unit || 'share';
     document.getElementById('sell-price').value = rec.sell_price;
@@ -5300,14 +5463,32 @@ function openSellModal(editId) {
     document.getElementById('sell-buy-price').value = rec.buy_price || '';
     document.getElementById('sell-note').value = rec.note || '';
     document.getElementById('sell-delete-wrap').style.display = 'block';
+    // Restore account selection if stored
+    if (rec.toAccountId) document.getElementById('sell-to-account').value = rec.toAccountId;
+    updateSellCostHint();
   } else {
     document.getElementById('sell-modal-title').textContent = '新增賣出記錄';
-    setSellMarket('TW');
-    ['sell-symbol','sell-name','sell-shares','sell-price','sell-buy-price','sell-note'].forEach(id => { document.getElementById(id).value = ''; });
+
+    // New sell: show holding picker
+    document.getElementById('sell-holding-picker-wrap').style.display = 'block';
+    document.getElementById('sell-mkt-tabs').style.display = 'none';
+    document.getElementById('sell-symbol-edit-wrap').style.display = 'none';
+    document.getElementById('sell-holding-info').style.display = 'none';
+
+    populateSellHoldingPicker();
+
+    document.getElementById('sell-holding-picker').value = '';
+    document.getElementById('sell-symbol').value = '';
+    document.getElementById('sell-name').value = '';
+    document.getElementById('sell-shares').value = '';
+    document.getElementById('sell-price').value = '';
+    document.getElementById('sell-buy-price').value = '';
+    document.getElementById('sell-note').value = '';
     document.getElementById('sell-unit').value = 'share';
     document.getElementById('sell-date').value = today;
     document.getElementById('sell-delete-wrap').style.display = 'none';
     document.getElementById('sell-cost-hint').style.display = 'none';
+    document.getElementById('sell-to-account').value = '';
   }
   updateSellSharesLabel();
   document.getElementById('sellModal').classList.add('open');
@@ -5322,44 +5503,77 @@ function saveSell() {
   const sellDate = document.getElementById('sell-date').value;
   const buyPriceInput = parseFloat(document.getElementById('sell-buy-price').value);
   const note = document.getElementById('sell-note').value.trim();
+  const toAccountId = document.getElementById('sell-to-account').value || null;
 
-  if (!symbol) { showToast('請輸入股票代號'); return; }
+  if (!symbol) { showToast('請先選擇要賣出的股票'); return; }
   if (isNaN(shares) || shares <= 0) { showToast('請輸入有效股數'); return; }
-  if (isNaN(sellPrice) || sellPrice <= 0) { showToast('請輸入有效賣出價格'); return; }
+  if (isNaN(sellPrice) || sellPrice <= 0) { showToast('請輸入賣出價格'); return; }
 
-  // Auto-derive buy price from holdings if not manually set
+  // Derive buy price from holdings or hidden field
   const group = groupBySymbol().find(g => g.symbol === symbol);
   const buyPrice = (!isNaN(buyPriceInput) && buyPriceInput > 0)
     ? buyPriceInput
     : (group ? group.avgPrice : null);
 
-  if (!buyPrice) { showToast('無法取得買入均價，請手動輸入'); return; }
+  if (!buyPrice) { showToast('無法取得買入均價'); return; }
 
   const actualShares = unit === 'lot' ? shares * 1000 : shares;
   const pnl = (sellPrice - buyPrice) * actualShares;
   const pnlPct = buyPrice > 0 ? ((sellPrice - buyPrice) / buyPrice * 100) : 0;
+  const totalRevenue = sellPrice * actualShares;
 
-  const rec = { symbol, market: _sellMarket, name: name || (group?.name || symbol), shares, unit, sell_price: sellPrice, sell_date: sellDate, buy_price: buyPrice, note, pnl, pnl_pct: pnlPct };
+  const rec = {
+    symbol, market: _sellMarket,
+    name: name || (group?.name || symbol),
+    shares, unit, sell_price: sellPrice, sell_date: sellDate,
+    buy_price: buyPrice, note, pnl, pnl_pct: pnlPct, toAccountId
+  };
 
   if (_sellEditId) {
+    // Reverse old account effect if any
+    const old = sellRecords.find(r => r.id === _sellEditId);
+    if (old?.toAccountId) {
+      const oldAcc = accounts.find(a => a.id === old.toAccountId);
+      const oldShares = old.unit === 'lot' ? old.shares * 1000 : old.shares;
+      if (oldAcc) oldAcc.balance -= old.sell_price * oldShares;
+    }
     const idx = sellRecords.findIndex(r => r.id === _sellEditId);
     if (idx !== -1) sellRecords[idx] = { ...sellRecords[idx], ...rec };
   } else {
     sellRecords.push({ id: uid(), ...rec, created_at: new Date().toISOString() });
   }
+
+  // Credit the destination account with sale proceeds
+  if (toAccountId) {
+    const acc = accounts.find(a => a.id === toAccountId);
+    if (acc) acc.balance += totalRevenue;
+  }
+
+  save();
   saveSellsLocal();
   closeModal('sellModal');
+  renderAccounts();
   renderRealizedPnl();
-  showToast(_sellEditId ? '賣出記錄已更新' : '賣出記錄已新增');
+  const sign = pnl >= 0 ? '+' : '';
+  const currency = _sellMarket === 'US' ? 'USD' : 'TWD';
+  showToast(_sellEditId ? '賣出記錄已更新' : `✅ 賣出完成，損益 ${sign}${fmtInvestAmt(pnl, currency)}`);
 }
 
 function deleteSell() {
   if (!_sellEditId) return;
   const rec = sellRecords.find(r => r.id === _sellEditId);
   if (!confirm(`確定要刪除這筆賣出記錄？\n${rec?.sell_date || ''} ${rec?.symbol || ''}`)) return;
+  // Reverse account credit
+  if (rec?.toAccountId) {
+    const acc = accounts.find(a => a.id === rec.toAccountId);
+    const actualShares = rec.unit === 'lot' ? rec.shares * 1000 : rec.shares;
+    if (acc) acc.balance -= rec.sell_price * actualShares;
+  }
   sellRecords = sellRecords.filter(r => r.id !== _sellEditId);
+  save();
   saveSellsLocal();
   closeModal('sellModal');
+  renderAccounts();
   renderRealizedPnl();
   showToast('賣出記錄已刪除');
 }
