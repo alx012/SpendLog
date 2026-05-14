@@ -5014,7 +5014,10 @@ function renderInvestments() {
             }).join('')}
           </div>
         </div>`
-      : '';
+      : `<div style="margin-top:6px;border-top:1px solid var(--border);padding-top:6px;display:flex;justify-content:flex-end;gap:8px">
+          <button onclick="event.stopPropagation();openInvestModal('${g.lots[0].id}')" style="background:var(--surface2);border:1px solid var(--border);color:var(--text2);border-radius:7px;padding:4px 12px;font-size:.72rem;cursor:pointer;font-family:'DM Sans'">✏️ 編輯 / 刪除</button>
+          <button onclick="event.stopPropagation();openAddLotModal('${g.symbol}')" style="background:rgba(124,106,255,.15);border:1px solid rgba(124,106,255,.3);color:var(--accent2);border-radius:7px;padding:4px 12px;font-size:.72rem;cursor:pointer;font-family:'DM Sans'">＋ 新增買入</button>
+        </div>`;
 
     let pnlSection = '', priceHtml = '';
 
@@ -5060,7 +5063,8 @@ function renderInvestments() {
       ? `成本 ${fmtInvestAmt(g.totalCost, 'USD')} ≈ ${fmtInvestAmt(costTWD,'TWD')}`
       : `成本 ${fmtInvestAmt(g.totalCost, currency)}`;
 
-    return `<div class="invest-item" onclick="openAddLotModal('${g.symbol}')">
+    const cardClick = g.lots.length > 1 ? `openAddLotModal('${g.symbol}')` : '';
+    return `<div class="invest-item" ${cardClick ? `onclick="${cardClick}"` : ''} style="${cardClick ? '' : 'cursor:default'}">
       <div class="invest-item-head">
         <div class="invest-symbol-badge"><span class="sym">${g.symbol}</span><span class="mkt">${g.market}</span></div>
         <div class="invest-item-info">
@@ -5236,6 +5240,26 @@ function saveInvestment() {
   closeModal('investModal');
   renderAccounts();
 
+  // ── 自動新增/更新交易記錄（支出）──
+  if (!_investEditId) {
+    const txDate = buyDate || localDateStr(new Date());
+    const sharesLabel = unit === 'lot' ? `${shares}張` : `${actualShares.toLocaleString()}股`;
+    const invId = investments[investments.length - 1]?.id; // the just-pushed record
+    const investTx = {
+      id: uid(),
+      type: 'expense',
+      amount: totalCost,
+      date: txDate,
+      cat: '投資',
+      payment: '轉帳',
+      note: `買入 ${symbol}（${name || symbol}）${sharesLabel} @ ${fmtInvestAmt(buyPrice, _investMarket === 'US' ? 'USD' : 'TWD')}`,
+      accountId: fromAccountId || null,
+      _investRef: invId,
+    };
+    transactions.unshift(investTx);
+    save();
+  }
+
   // Fetch price if new symbol
   const isNewSymbol = !investments.some(i => i.symbol === symbol && i.id !== _investEditId) || investPriceCache[symbol] === undefined;
   if (isNewSymbol || investPriceCache[symbol] === undefined) {
@@ -5258,6 +5282,8 @@ function deleteInvestment() {
     const actualShares = inv.unit === 'lot' ? inv.shares * 1000 : inv.shares;
     if (acc) acc.balance += inv.buy_price * actualShares;
   }
+  // Remove linked transaction
+  transactions = transactions.filter(t => t._investRef !== _investEditId);
   sbDeleteInvestment(_investEditId);
   investments = investments.filter(i => i.id !== _investEditId);
   save();
@@ -5549,14 +5575,33 @@ function saveSell() {
     if (acc) acc.balance += totalRevenue;
   }
 
+  // ── 自動新增交易記錄（收入）──
+  if (!_sellEditId) {
+    const sellRec = sellRecords[sellRecords.length - 1]; // just pushed
+    const sharesLabel = unit === 'lot' ? `${shares}張` : `${actualShares.toLocaleString()}股`;
+    const sellTx = {
+      id: uid(),
+      type: 'income',
+      amount: totalRevenue,
+      date: sellDate || localDateStr(new Date()),
+      cat: '投資',
+      payment: '轉帳',
+      note: `賣出 ${symbol}（${name || (group?.name || symbol)}）${sharesLabel} @ ${fmtInvestAmt(sellPrice, _sellMarket === 'US' ? 'USD' : 'TWD')}`,
+      accountId: toAccountId || null,
+      _sellRef: sellRec?.id,
+    };
+    transactions.unshift(sellTx);
+  }
+
   save();
   saveSellsLocal();
   closeModal('sellModal');
   renderAccounts();
   renderRealizedPnl();
+  renderAll();
   const sign = pnl >= 0 ? '+' : '';
-  const currency = _sellMarket === 'US' ? 'USD' : 'TWD';
-  showToast(_sellEditId ? '賣出記錄已更新' : `✅ 賣出完成，損益 ${sign}${fmtInvestAmt(pnl, currency)}`);
+  const currency2 = _sellMarket === 'US' ? 'USD' : 'TWD';
+  showToast(_sellEditId ? '賣出記錄已更新' : `✅ 賣出完成，損益 ${sign}${fmtInvestAmt(pnl, currency2)}`);
 }
 
 function deleteSell() {
@@ -5569,12 +5614,15 @@ function deleteSell() {
     const actualShares = rec.unit === 'lot' ? rec.shares * 1000 : rec.shares;
     if (acc) acc.balance -= rec.sell_price * actualShares;
   }
+  // Remove linked transaction
+  transactions = transactions.filter(t => t._sellRef !== _sellEditId);
   sellRecords = sellRecords.filter(r => r.id !== _sellEditId);
   save();
   saveSellsLocal();
   closeModal('sellModal');
   renderAccounts();
   renderRealizedPnl();
+  renderAll();
   showToast('賣出記錄已刪除');
 }
 
