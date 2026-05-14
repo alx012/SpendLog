@@ -1508,6 +1508,40 @@
   </div>
 </div>
 
+<!-- 帳戶明細 Modal -->
+<div class="modal-overlay" id="accDetailModal">
+  <div class="modal" style="max-height:88vh;display:flex;flex-direction:column">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-shrink:0">
+      <div>
+        <div class="modal-title" style="margin:0" id="acc-detail-title">帳戶明細</div>
+        <div id="acc-detail-balance" style="font-size:1.4rem;font-weight:700;color:var(--accent);margin-top:2px"></div>
+      </div>
+      <button onclick="closeModal('accDetailModal')" style="background:var(--surface2);border:1px solid var(--border);color:var(--text2);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center">✕</button>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-shrink:0">
+      <button onclick="accDetailChangeMonth(-1)" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);width:36px;height:36px;border-radius:8px;cursor:pointer;font-size:1.1rem">‹</button>
+      <span id="acc-detail-month-label" style="font-weight:600;color:var(--text)"></span>
+      <button onclick="accDetailChangeMonth(1)" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);width:36px;height:36px;border-radius:8px;cursor:pointer;font-size:1.1rem">›</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;flex-shrink:0">
+      <div style="background:var(--surface2);border-radius:10px;padding:10px;text-align:center">
+        <div style="font-size:.72rem;color:var(--text2);margin-bottom:2px">收入</div>
+        <div id="acc-detail-income" style="font-weight:700;color:var(--green);font-size:.95rem"></div>
+      </div>
+      <div style="background:var(--surface2);border-radius:10px;padding:10px;text-align:center">
+        <div style="font-size:.72rem;color:var(--text2);margin-bottom:2px">支出</div>
+        <div id="acc-detail-expense" style="font-weight:700;color:var(--red);font-size:.95rem"></div>
+      </div>
+      <div style="background:var(--surface2);border-radius:10px;padding:10px;text-align:center">
+        <div style="font-size:.72rem;color:var(--text2);margin-bottom:2px">淨額</div>
+        <div id="acc-detail-net" style="font-weight:700;font-size:.95rem"></div>
+      </div>
+    </div>
+    <div id="acc-detail-list" style="overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:8px"></div>
+  </div>
+</div>
+
 <!-- Budget Modal -->
 <div class="modal-overlay" id="budgetModal">
   <div class="modal">
@@ -2687,6 +2721,94 @@ function deleteTx() {
 const ACC_ICONS  = { bank:'🏦', cash:'💵', card:'💳', easycard:'🚇', invest:'📈', crypto:'₿' };
 const ACC_LABELS = { bank:'銀行存款', cash:'現金', card:'信用卡', easycard:'悠遊卡', invest:'投資帳戶', crypto:'加密貨幣' };
 
+// ═══════════════════════════
+// ACCOUNT DETAIL
+// ═══════════════════════════
+let accDetailId    = null;
+let accDetailMonth = new Date().getMonth();
+let accDetailYear  = new Date().getFullYear();
+
+function openAccDetail(id) {
+  accDetailId    = id;
+  accDetailMonth = new Date().getMonth();
+  accDetailYear  = new Date().getFullYear();
+  renderAccDetail();
+  document.getElementById('accDetailModal').classList.add('open');
+}
+
+function accDetailChangeMonth(d) {
+  accDetailMonth += d;
+  if (accDetailMonth > 11) { accDetailMonth = 0; accDetailYear++; }
+  if (accDetailMonth < 0)  { accDetailMonth = 11; accDetailYear--; }
+  renderAccDetail();
+}
+
+function renderAccDetail() {
+  const a = accounts.find(a => a.id === accDetailId);
+  if (!a) return;
+
+  // Header
+  document.getElementById('acc-detail-title').textContent   = `${ACC_ICONS[a.type]||'💳'} ${a.name}`;
+  document.getElementById('acc-detail-balance').textContent = `餘額 $${fmt(a.balance)}`;
+  document.getElementById('acc-detail-month-label').textContent =
+    `${accDetailYear} 年 ${MONTHS[accDetailMonth]}`;
+
+  // Filter txs for this account & month
+  const txs = transactions.filter(t => {
+    const d = new Date(t.date);
+    if (d.getMonth() !== accDetailMonth || d.getFullYear() !== accDetailYear) return false;
+    return t.accountId === a.id || t.fromId === a.id || t.toId === a.id;
+  }).sort((a,b) => b.date.localeCompare(a.date));
+
+  // Summary
+  let income = 0, expense = 0;
+  txs.forEach(t => {
+    if (t.type === 'income')  income  += t.amount;
+    if (t.type === 'expense') expense += t.amount;
+    if (t.type === 'transfer') {
+      if (t.toId   === a.id) income  += t.amount;
+      if (t.fromId === a.id) expense += t.amount;
+    }
+  });
+  const net = income - expense;
+  document.getElementById('acc-detail-income').textContent  = `+$${fmt(income)}`;
+  document.getElementById('acc-detail-expense').textContent = `-$${fmt(expense)}`;
+  const netEl = document.getElementById('acc-detail-net');
+  netEl.textContent = `${net>=0?'+':'-'}$${fmt(Math.abs(net))}`;
+  netEl.style.color = net >= 0 ? 'var(--green)' : 'var(--red)';
+
+  // List
+  const list = document.getElementById('acc-detail-list');
+  if (!txs.length) {
+    list.innerHTML = '<div style="text-align:center;color:var(--text2);padding:32px 0;font-size:.9rem">這個月沒有交易紀錄</div>';
+    return;
+  }
+
+  const TYPE_ICON  = { income:'💰', expense:'💸', transfer:'🔄' };
+  const TYPE_LABEL = { income:'收入', expense:'支出', transfer:'轉帳' };
+
+  list.innerHTML = txs.map(t => {
+    // Determine sign from perspective of this account
+    let sign = '+', color = 'var(--green)';
+    if (t.type === 'expense') { sign = '-'; color = 'var(--red)'; }
+    if (t.type === 'transfer') {
+      if (t.fromId === a.id) { sign = '-'; color = 'var(--red)'; }
+      else                   { sign = '+'; color = 'var(--green)'; }
+    }
+    return `
+    <div style="background:var(--surface2);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px">
+      <div style="font-size:1.4rem;width:36px;text-align:center">${TYPE_ICON[t.type]||'💳'}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:.9rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+          ${t.note || t.cat || TYPE_LABEL[t.type]}
+        </div>
+        <div style="font-size:.75rem;color:var(--text2);margin-top:2px">${t.date} · ${t.cat||''}</div>
+      </div>
+      <div style="font-weight:700;color:${color};font-size:.95rem;white-space:nowrap">${sign}$${fmt(t.amount)}</div>
+    </div>`;
+  }).join('');
+}
+
 function renderAccounts() {
   const list = document.getElementById('account-list');
   const net  = accounts.reduce((s,a) => s + (a.type==='card' ? -a.balance : a.balance), 0);
@@ -2696,7 +2818,7 @@ function renderAccounts() {
     return;
   }
   list.innerHTML = accounts.map(a => `
-    <div class="account-card">
+    <div class="account-card" onclick="openAccDetail('${a.id}')">
       <div class="acc-icon" style="background:var(--surface2)">${ACC_ICONS[a.type]||'💳'}</div>
       <div class="acc-info">
         <div class="acc-name">${a.name}</div>
