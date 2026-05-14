@@ -727,6 +727,45 @@
   .invest-price-chip { background: var(--surface2); border-radius: 8px; padding: 7px 8px; }
   .invest-price-chip .ipc-label { font-size: .6rem; color: var(--text3); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px; }
   .invest-price-chip .ipc-val { font-size: .82rem; font-weight: 600; color: var(--text); }
+  /* ── 已實現損益 ── */
+  .realized-section { margin-top: 20px; }
+  .realized-tabs { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+  .realized-tab { background: var(--surface2); border: 1.5px solid var(--border); border-radius: 8px; padding: 6px 14px; font-size: .78rem; font-weight: 600; color: var(--text2); cursor: pointer; transition: .15s; font-family: 'DM Sans'; }
+  .realized-tab.active { background: rgba(124,106,255,.15); border-color: var(--accent); color: var(--accent2); }
+  .realized-summary { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .realized-sum-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; text-align: center; }
+  .realized-sum-card .rs-label { font-size: .65rem; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px; }
+  .realized-sum-card .rs-val { font-size: .95rem; font-weight: 700; }
+  .sell-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; cursor: pointer; transition: .15s; }
+  .sell-item:hover { background: var(--surface2); border-color: var(--border2); }
+  .sell-item-left .sell-sym { font-size: .85rem; font-weight: 700; color: var(--text); }
+  .sell-item-left .sell-name { font-size: .72rem; color: var(--text3); margin-top: 1px; }
+  .sell-item-left .sell-meta { font-size: .7rem; color: var(--text3); margin-top: 4px; }
+  .sell-item-right { text-align: right; flex-shrink: 0; }
+  .sell-item-right .sell-pnl { font-size: .95rem; font-weight: 700; }
+  .sell-item-right .sell-pct { font-size: .72rem; font-weight: 600; margin-top: 1px; }
+  .sell-item-right .sell-pnl.gain, .sell-item-right .sell-pct.gain { color: var(--green); }
+  .sell-item-right .sell-pnl.loss, .sell-item-right .sell-pct.loss { color: var(--red); }
+  .sell-item-right .sell-pnl.neutral, .sell-item-right .sell-pct.neutral { color: var(--text3); }
+
+  /* ── 資產配置圓餅圖 ── */
+  .alloc-wrap { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+  @media(min-width:500px) { .alloc-wrap { flex-direction: row; align-items: flex-start; } }
+  .alloc-canvas-wrap { position: relative; width: 180px; height: 180px; flex-shrink: 0; margin: 0 auto; }
+  .alloc-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; }
+  .alloc-center-label { font-size: .65rem; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; }
+  .alloc-center-val { font-size: .95rem; font-weight: 700; color: var(--text); margin-top: 2px; }
+  .alloc-legend { flex: 1; width: 100%; }
+  .alloc-legend-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border); }
+  .alloc-legend-item:last-child { border-bottom: none; }
+  .al-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+  .al-name { flex: 1; font-size: .82rem; color: var(--text2); }
+  .al-pct { font-size: .82rem; font-weight: 700; color: var(--text); }
+  .al-val { font-size: .72rem; color: var(--text3); }
+  .alloc-seg-tabs { display: flex; gap: 6px; margin-bottom: 14px; }
+  .alloc-seg-tab { flex: 1; padding: 7px; background: var(--surface2); border: 1.5px solid var(--border); border-radius: 8px; font-size: .78rem; font-weight: 600; color: var(--text2); cursor: pointer; text-align: center; transition: .15s; font-family: 'DM Sans'; }
+  .alloc-seg-tab.active { background: rgba(124,106,255,.15); border-color: var(--accent); color: var(--accent2); }
+
   .invest-loading-spinner { display: flex; align-items: center; gap: 6px; font-size: .78rem; color: var(--text3); padding: 6px 0; }
   .invest-loading-spinner svg { animation: spin 1s linear infinite; flex-shrink: 0; }
   @keyframes spin { to { transform: rotate(360deg); } }
@@ -1305,10 +1344,60 @@
           <span id="invest-fx-label"></span>
           <span id="invest-price-time"></span>
         </div>
+        <!-- Asset Allocation Chart -->
+        <div class="section-title" style="margin-top:4px">資產配置</div>
+        <div class="chart-card" id="invest-alloc-card" style="display:none">
+          <div class="alloc-seg-tabs">
+            <div class="alloc-seg-tab active" id="alloc-tab-market" onclick="setAllocView('market')">台股 / 美股</div>
+            <div class="alloc-seg-tab" id="alloc-tab-symbol" onclick="setAllocView('symbol')">各持股佔比</div>
+          </div>
+          <div class="alloc-wrap">
+            <div class="alloc-canvas-wrap">
+              <canvas id="allocPieChart"></canvas>
+              <div class="alloc-center">
+                <div class="alloc-center-label">市值</div>
+                <div class="alloc-center-val" id="alloc-center-val">—</div>
+              </div>
+            </div>
+            <div class="alloc-legend" id="alloc-legend"></div>
+          </div>
+        </div>
+        <div id="invest-alloc-empty" style="font-size:.8rem;color:var(--text3);padding:8px 0 16px">取得報價後顯示資產配置圖</div>
+
         <!-- Holdings list (grouped by symbol) -->
         <div class="section-title">持股明細</div>
         <div class="invest-list" id="invest-list">
           <div class="empty"><div class="icon">📈</div><p>尚未新增任何持股<br>點擊「+ 新增買入」開始記錄</p></div>
+        </div>
+
+        <!-- Realized P&L Section -->
+        <div class="realized-section">
+          <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <span>已實現損益</span>
+            <button class="btn-secondary" onclick="openSellModal()" style="padding:5px 12px;font-size:.75rem">+ 新增賣出</button>
+          </div>
+          <div class="realized-summary">
+            <div class="realized-sum-card">
+              <div class="rs-label">已實現總損益</div>
+              <div class="rs-val" id="realized-total-pnl" style="color:var(--text3)">—</div>
+            </div>
+            <div class="realized-sum-card">
+              <div class="rs-label">獲利次數</div>
+              <div class="rs-val" id="realized-win-count" style="color:var(--green)">0</div>
+            </div>
+            <div class="realized-sum-card">
+              <div class="rs-label">虧損次數</div>
+              <div class="rs-val" id="realized-loss-count" style="color:var(--red)">0</div>
+            </div>
+          </div>
+          <div class="realized-tabs">
+            <button class="realized-tab active" id="rtab-all" onclick="setRealizedTab('all',this)">全部</button>
+            <button class="realized-tab" id="rtab-gain" onclick="setRealizedTab('gain',this)">獲利</button>
+            <button class="realized-tab" id="rtab-loss" onclick="setRealizedTab('loss',this)">虧損</button>
+          </div>
+          <div class="tx-list" id="realized-list" style="gap:4px">
+            <div class="empty" style="padding:28px 0"><div class="icon" style="font-size:1.4rem">💹</div><p style="font-size:.82rem;color:var(--text3)">尚未記錄賣出交易<br>點擊「+ 新增賣出」開始記錄</p></div>
+          </div>
         </div>
       </div>
     </div>
@@ -1844,6 +1933,74 @@
     <div style="display:flex;gap:10px;margin-top:4px">
       <button class="btn-secondary" onclick="closeModal('profileModal')">取消</button>
       <button class="btn-primary" style="margin-top:0" onclick="saveProfile()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Sell Investment Modal -->
+<div class="modal-overlay" id="sellModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <div class="modal-title" style="margin:0" id="sell-modal-title">新增賣出記錄</div>
+      <button onclick="closeModal('sellModal')" style="background:var(--surface2);border:1px solid var(--border);color:var(--text2);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center">✕</button>
+    </div>
+    <div style="font-size:.75rem;color:var(--text3);margin-bottom:16px">記錄賣出交易，系統自動計算已實現損益</div>
+    <!-- Market tabs -->
+    <div class="invest-modal-tabs">
+      <button class="invest-tab-btn tw active" id="sell-mkt-tw" onclick="setSellMarket('TW')">🇹🇼 台股</button>
+      <button class="invest-tab-btn us" id="sell-mkt-us" onclick="setSellMarket('US')">🇺🇸 美股</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">股票代號 <span id="sell-sym-hint" style="color:var(--text3);font-weight:400">（例：2330）</span></label>
+      <input class="form-input" id="sell-symbol" placeholder="輸入代號..." style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();updateSellCostHint()">
+    </div>
+    <div class="form-group">
+      <label class="form-label">股票名稱（選填）</label>
+      <input class="form-input" id="sell-name" placeholder="例：台積電">
+    </div>
+    <div class="grid-2">
+      <div class="form-group">
+        <label class="form-label" id="sell-shares-label">賣出股數（股）</label>
+        <input class="form-input" type="number" id="sell-shares" placeholder="0" min="0" step="any" oninput="updateSellCostHint()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">單位</label>
+        <select class="form-input form-select" id="sell-unit" onchange="updateSellSharesLabel();updateSellCostHint()">
+          <option value="share">股</option>
+          <option value="lot">張（1張=1000股）</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label" id="sell-price-label">賣出均價（每股）</label>
+      <div class="amount-input-wrap">
+        <span class="currency" id="sell-currency-symbol">$</span>
+        <input class="form-input" type="number" id="sell-price" placeholder="0" step="any" oninput="updateSellCostHint()">
+      </div>
+    </div>
+    <!-- Cost hint from holdings -->
+    <div id="sell-cost-hint" style="background:var(--surface2);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:.78rem;color:var(--text2);display:none">
+      <div id="sell-cost-hint-content"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">賣出日期</label>
+      <input class="form-input" type="date" id="sell-date">
+    </div>
+    <div class="form-group">
+      <label class="form-label">買入均價（選填，留空則自動從持股記錄帶入）</label>
+      <div class="amount-input-wrap">
+        <span class="currency" id="sell-buy-currency">$</span>
+        <input class="form-input" type="number" id="sell-buy-price" placeholder="自動帶入" step="any">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">備註（選填）</label>
+      <input class="form-input" id="sell-note" placeholder="例：停利出場...">
+    </div>
+    <button class="btn-primary" onclick="saveSell()">儲存賣出記錄</button>
+    <div id="sell-delete-wrap" style="display:none;margin-top:10px">
+      <button onclick="deleteSell()" style="width:100%;padding:10px;background:transparent;border:1px solid var(--red);color:var(--red);border-radius:var(--radius-sm);font-family:'DM Sans';font-size:.88rem;font-weight:500;cursor:pointer;">🗑 刪除這筆記錄</button>
     </div>
   </div>
 </div>
@@ -4932,6 +5089,8 @@ async function refreshInvestPrices() {
   if (infoBar) infoBar.style.display = 'flex';
 
   renderInvestments();
+  renderAllocChart();
+  renderRealizedPnl();
   if (btn) { btn.disabled = false; btn.innerHTML = normalSvg + ' 刷新報價'; }
 }
 
@@ -5055,10 +5214,354 @@ setTimeout(() => {
         const uncached = symbols.filter(s => investPriceCache[s] === undefined);
         const hasUS = investments.some(i => i.market === 'US');
         if (uncached.length > 0 || (hasUS && !usdTwdRate)) refreshInvestPrices();
+        else { renderAllocChart(); renderRealizedPnl(); }
       }
     };
   }
 }, 0);
+
+// ═══════════════════════════════════════════════════════
+// SELL RECORDS  — 已實現損益
+// ═══════════════════════════════════════════════════════
+let sellRecords = DB.get('sells') || [];
+let _sellEditId = null;
+let _sellMarket = 'TW';
+let _realizedTab = 'all';
+
+function saveSellsLocal() {
+  DB.set('sells', sellRecords);
+}
+
+function setSellMarket(mkt) {
+  _sellMarket = mkt;
+  document.getElementById('sell-mkt-tw').classList.toggle('active', mkt === 'TW');
+  document.getElementById('sell-mkt-us').classList.toggle('active', mkt === 'US');
+  document.getElementById('sell-sym-hint').textContent = mkt === 'TW' ? '（例：2330、0050）' : '（例：AAPL、NVDA、SPY）';
+  document.getElementById('sell-currency-symbol').textContent = mkt === 'US' ? 'US$' : '$';
+  document.getElementById('sell-buy-currency').textContent = mkt === 'US' ? 'US$' : '$';
+  document.getElementById('sell-price-label').textContent = mkt === 'US' ? '賣出均價（每股，USD）' : '賣出均價（每股，TWD）';
+  updateSellSharesLabel();
+  updateSellCostHint();
+}
+
+function updateSellSharesLabel() {
+  const unit = document.getElementById('sell-unit').value;
+  document.getElementById('sell-shares-label').textContent = unit === 'lot' ? '賣出張數（1張=1000股）' : '賣出股數（股）';
+}
+
+function updateSellCostHint() {
+  const symbol = document.getElementById('sell-symbol').value.trim().toUpperCase();
+  const shares = parseFloat(document.getElementById('sell-shares').value);
+  const unit = document.getElementById('sell-unit').value;
+  const sellPrice = parseFloat(document.getElementById('sell-price').value);
+  const hint = document.getElementById('sell-cost-hint');
+  const hintContent = document.getElementById('sell-cost-hint-content');
+
+  const group = groupBySymbol().find(g => g.symbol === symbol);
+  if (!group) { hint.style.display = 'none'; return; }
+
+  const actualShares = unit === 'lot' ? shares * 1000 : shares;
+  const currency = _sellMarket === 'US' ? 'USD' : 'TWD';
+
+  let html = `<span style="color:var(--accent2);font-weight:600">${symbol}</span> 持有加權均價：<strong>${fmtInvestAmt(group.avgPrice, currency)}</strong>`;
+
+  if (!isNaN(actualShares) && !isNaN(sellPrice) && actualShares > 0 && sellPrice > 0) {
+    const cost = group.avgPrice * actualShares;
+    const rev = sellPrice * actualShares;
+    const pnl = rev - cost;
+    const pct = cost > 0 ? (pnl / cost * 100) : 0;
+    const sign = pnl >= 0 ? '+' : '';
+    const color = pnl >= 0 ? 'var(--green)' : 'var(--red)';
+    html += `<br>預計已實現損益：<strong style="color:${color}">${sign}${fmtInvestAmt(pnl, currency)}</strong> <span style="color:${color}">(${sign}${pct.toFixed(2)}%)</span>`;
+    // Auto-fill buy price
+    if (!document.getElementById('sell-buy-price').value) {
+      document.getElementById('sell-buy-price').placeholder = group.avgPrice.toFixed(2);
+    }
+  }
+
+  hintContent.innerHTML = html;
+  hint.style.display = 'block';
+}
+
+function openSellModal(editId) {
+  _sellEditId = editId || null;
+  const today = new Date().toISOString().slice(0, 10);
+  if (editId) {
+    const rec = sellRecords.find(r => r.id === editId);
+    if (!rec) return;
+    document.getElementById('sell-modal-title').textContent = '編輯賣出記錄';
+    setSellMarket(rec.market || 'TW');
+    document.getElementById('sell-symbol').value = rec.symbol;
+    document.getElementById('sell-name').value = rec.name || '';
+    document.getElementById('sell-shares').value = rec.shares;
+    document.getElementById('sell-unit').value = rec.unit || 'share';
+    document.getElementById('sell-price').value = rec.sell_price;
+    document.getElementById('sell-date').value = rec.sell_date || today;
+    document.getElementById('sell-buy-price').value = rec.buy_price || '';
+    document.getElementById('sell-note').value = rec.note || '';
+    document.getElementById('sell-delete-wrap').style.display = 'block';
+  } else {
+    document.getElementById('sell-modal-title').textContent = '新增賣出記錄';
+    setSellMarket('TW');
+    ['sell-symbol','sell-name','sell-shares','sell-price','sell-buy-price','sell-note'].forEach(id => { document.getElementById(id).value = ''; });
+    document.getElementById('sell-unit').value = 'share';
+    document.getElementById('sell-date').value = today;
+    document.getElementById('sell-delete-wrap').style.display = 'none';
+    document.getElementById('sell-cost-hint').style.display = 'none';
+  }
+  updateSellSharesLabel();
+  document.getElementById('sellModal').classList.add('open');
+}
+
+function saveSell() {
+  const symbol = document.getElementById('sell-symbol').value.trim().toUpperCase();
+  const name = document.getElementById('sell-name').value.trim();
+  const shares = parseFloat(document.getElementById('sell-shares').value);
+  const unit = document.getElementById('sell-unit').value;
+  const sellPrice = parseFloat(document.getElementById('sell-price').value);
+  const sellDate = document.getElementById('sell-date').value;
+  const buyPriceInput = parseFloat(document.getElementById('sell-buy-price').value);
+  const note = document.getElementById('sell-note').value.trim();
+
+  if (!symbol) { showToast('請輸入股票代號'); return; }
+  if (isNaN(shares) || shares <= 0) { showToast('請輸入有效股數'); return; }
+  if (isNaN(sellPrice) || sellPrice <= 0) { showToast('請輸入有效賣出價格'); return; }
+
+  // Auto-derive buy price from holdings if not manually set
+  const group = groupBySymbol().find(g => g.symbol === symbol);
+  const buyPrice = (!isNaN(buyPriceInput) && buyPriceInput > 0)
+    ? buyPriceInput
+    : (group ? group.avgPrice : null);
+
+  if (!buyPrice) { showToast('無法取得買入均價，請手動輸入'); return; }
+
+  const actualShares = unit === 'lot' ? shares * 1000 : shares;
+  const pnl = (sellPrice - buyPrice) * actualShares;
+  const pnlPct = buyPrice > 0 ? ((sellPrice - buyPrice) / buyPrice * 100) : 0;
+
+  const rec = { symbol, market: _sellMarket, name: name || (group?.name || symbol), shares, unit, sell_price: sellPrice, sell_date: sellDate, buy_price: buyPrice, note, pnl, pnl_pct: pnlPct };
+
+  if (_sellEditId) {
+    const idx = sellRecords.findIndex(r => r.id === _sellEditId);
+    if (idx !== -1) sellRecords[idx] = { ...sellRecords[idx], ...rec };
+  } else {
+    sellRecords.push({ id: uid(), ...rec, created_at: new Date().toISOString() });
+  }
+  saveSellsLocal();
+  closeModal('sellModal');
+  renderRealizedPnl();
+  showToast(_sellEditId ? '賣出記錄已更新' : '賣出記錄已新增');
+}
+
+function deleteSell() {
+  if (!_sellEditId) return;
+  const rec = sellRecords.find(r => r.id === _sellEditId);
+  if (!confirm(`確定要刪除這筆賣出記錄？\n${rec?.sell_date || ''} ${rec?.symbol || ''}`)) return;
+  sellRecords = sellRecords.filter(r => r.id !== _sellEditId);
+  saveSellsLocal();
+  closeModal('sellModal');
+  renderRealizedPnl();
+  showToast('賣出記錄已刪除');
+}
+
+function setRealizedTab(tab, btn) {
+  _realizedTab = tab;
+  document.querySelectorAll('.realized-tab').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderRealizedPnl();
+}
+
+function renderRealizedPnl() {
+  const list = document.getElementById('realized-list');
+  if (!list) return;
+
+  const fxRate = usdTwdRate || null;
+  // Totals
+  let totalPnlTWD = 0, winCount = 0, lossCount = 0;
+  sellRecords.forEach(r => {
+    const actualShares = r.unit === 'lot' ? r.shares * 1000 : r.shares;
+    const pnl = (r.sell_price - r.buy_price) * actualShares;
+    const pnlTWD = (r.market === 'US' && fxRate) ? pnl * fxRate : pnl;
+    totalPnlTWD += pnlTWD;
+    if (pnl > 0) winCount++; else if (pnl < 0) lossCount++;
+  });
+
+  const totalEl = document.getElementById('realized-total-pnl');
+  if (totalEl) {
+    if (sellRecords.length === 0) {
+      totalEl.textContent = '—'; totalEl.style.color = 'var(--text3)';
+    } else {
+      const sign = totalPnlTWD >= 0 ? '+' : '';
+      totalEl.textContent = sign + fmtInvestAmt(totalPnlTWD, 'TWD');
+      totalEl.style.color = totalPnlTWD >= 0 ? 'var(--green)' : 'var(--red)';
+    }
+  }
+  const winEl = document.getElementById('realized-win-count');
+  const lossEl = document.getElementById('realized-loss-count');
+  if (winEl) winEl.textContent = winCount;
+  if (lossEl) lossEl.textContent = lossCount;
+
+  // Filter
+  let filtered = sellRecords.slice().sort((a,b) => (a.sell_date||'') < (b.sell_date||'') ? 1 : -1);
+  if (_realizedTab === 'gain') filtered = filtered.filter(r => r.pnl >= 0);
+  if (_realizedTab === 'loss') filtered = filtered.filter(r => r.pnl < 0);
+
+  if (filtered.length === 0) {
+    list.innerHTML = `<div class="empty" style="padding:28px 0"><div class="icon" style="font-size:1.4rem">💹</div><p style="font-size:.82rem;color:var(--text3)">${_realizedTab !== 'all' ? '此篩選條件無記錄' : '尚未記錄賣出交易<br>點擊「+ 新增賣出」開始記錄'}</p></div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(r => {
+    const actualShares = r.unit === 'lot' ? r.shares * 1000 : r.shares;
+    const currency = r.market === 'US' ? 'USD' : 'TWD';
+    const pnl = (r.sell_price - r.buy_price) * actualShares;
+    const pnlPct = r.buy_price > 0 ? ((r.sell_price - r.buy_price) / r.buy_price * 100) : 0;
+    const cls = pnl > 0 ? 'gain' : pnl < 0 ? 'loss' : 'neutral';
+    const sign = pnl >= 0 ? '+' : '';
+    const mktBadge = r.market === 'US' ? '🇺🇸' : '🇹🇼';
+    const sharesStr = r.unit === 'lot' ? `${r.shares}張` : `${actualShares.toLocaleString()}股`;
+    const pnlTWD = (r.market === 'US' && fxRate) ? pnl * fxRate : null;
+
+    return `<div class="sell-item" onclick="openSellModal('${r.id}')">
+      <div class="sell-item-left">
+        <div class="sell-sym">${mktBadge} ${r.symbol}</div>
+        <div class="sell-name">${r.name || ''}</div>
+        <div class="sell-meta">${r.sell_date || '—'} · 賣 ${sharesStr} @ ${fmtInvestAmt(r.sell_price, currency)} · 成本 ${fmtInvestAmt(r.buy_price, currency)}</div>
+        ${r.note ? `<div class="sell-meta" style="color:var(--text3)">📝 ${r.note}</div>` : ''}
+      </div>
+      <div class="sell-item-right">
+        <div class="sell-pnl ${cls}">${sign}${fmtInvestAmt(pnl, currency)}</div>
+        <div class="sell-pct ${cls}">${sign}${pnlPct.toFixed(2)}%</div>
+        ${pnlTWD !== null ? `<div style="font-size:.65rem;color:var(--text3)">≈${sign}${fmtInvestAmt(pnlTWD,'TWD')}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+// ASSET ALLOCATION CHART
+// ═══════════════════════════════════════════════════════
+let _allocChart = null;
+let _allocView = 'market'; // 'market' | 'symbol'
+
+const ALLOC_COLORS = [
+  '#7c6aff','#34d399','#f87171','#fbbf24','#2dd4bf','#f472b6',
+  '#60a5fa','#a78bfa','#34d399','#fb923c','#818cf8','#4ade80',
+];
+
+function setAllocView(view) {
+  _allocView = view;
+  document.getElementById('alloc-tab-market').classList.toggle('active', view === 'market');
+  document.getElementById('alloc-tab-symbol').classList.toggle('active', view === 'symbol');
+  renderAllocChart();
+}
+
+function renderAllocChart() {
+  const groups = groupBySymbol();
+  const fxRate = usdTwdRate || null;
+  const card = document.getElementById('invest-alloc-card');
+  const empty = document.getElementById('invest-alloc-empty');
+
+  // Check if we have price data
+  const pricedGroups = groups.filter(g => {
+    const pc = investPriceCache[g.symbol];
+    return pc && pc.price != null;
+  });
+
+  if (pricedGroups.length === 0) {
+    if (card) card.style.display = 'none';
+    if (empty) empty.style.display = 'block';
+    return;
+  }
+
+  if (card) card.style.display = 'block';
+  if (empty) empty.style.display = 'none';
+
+  let labels = [], data = [], colors = [];
+
+  if (_allocView === 'market') {
+    let twVal = 0, usVal = 0;
+    pricedGroups.forEach(g => {
+      const pc = investPriceCache[g.symbol];
+      const curVal = g.totalShares * pc.price;
+      if (g.market === 'US') {
+        usVal += fxRate ? curVal * fxRate : curVal;
+      } else {
+        twVal += curVal;
+      }
+    });
+    if (twVal > 0) { labels.push('🇹🇼 台股'); data.push(twVal); colors.push('#7c6aff'); }
+    if (usVal > 0) { labels.push('🇺🇸 美股'); data.push(usVal); colors.push('#34d399'); }
+  } else {
+    pricedGroups.forEach((g, i) => {
+      const pc = investPriceCache[g.symbol];
+      const curVal = g.totalShares * pc.price;
+      const curValTWD = (g.market === 'US' && fxRate) ? curVal * fxRate : curVal;
+      labels.push(g.symbol);
+      data.push(curValTWD);
+      colors.push(ALLOC_COLORS[i % ALLOC_COLORS.length]);
+    });
+    // Sort descending
+    const sorted = labels.map((l,i) => ({l, d:data[i], c:colors[i]})).sort((a,b)=>b.d-a.d);
+    labels = sorted.map(s=>s.l); data = sorted.map(s=>s.d); colors = sorted.map(s=>s.c);
+  }
+
+  const total = data.reduce((a,b)=>a+b,0);
+  const centerEl = document.getElementById('alloc-center-val');
+  if (centerEl) centerEl.textContent = fmtInvestAmt(total, 'TWD');
+
+  // Legend
+  const legend = document.getElementById('alloc-legend');
+  if (legend) {
+    legend.innerHTML = labels.map((l,i) => {
+      const pct = total > 0 ? (data[i]/total*100).toFixed(1) : '0.0';
+      const name = _allocView === 'symbol' ? (pricedGroups.find(g=>g.symbol===l)?.name || l) : l;
+      return `<div class="alloc-legend-item">
+        <div class="al-dot" style="background:${colors[i]}"></div>
+        <div class="al-name">${l}${_allocView==='symbol'&&name!==l?` <span style="color:var(--text3)">${name}</span>`:''}
+        </div>
+        <div class="al-pct">${pct}%</div>
+      </div>`;
+    }).join('');
+  }
+
+  // Chart
+  const canvas = document.getElementById('allocPieChart');
+  if (!canvas) return;
+  if (_allocChart) { _allocChart.destroy(); _allocChart = null; }
+  _allocChart = new Chart(canvas, {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data, backgroundColor: colors, borderColor: 'transparent', borderWidth: 0, hoverOffset: 6 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: {
+        label: ctx => {
+          const v = ctx.raw;
+          const pct = total > 0 ? (v/total*100).toFixed(1) : '0.0';
+          return ` ${fmtInvestAmt(v,'TWD')}  (${pct}%)`;
+        }
+      }}},
+      cutout: '68%',
+    }
+  });
+}
+
+// Hook into renderInvestments to also render the chart and realized P&L
+const _origRenderInvestments = window.renderInvestments;
+
+// Patch showPage to render allocation + realized on investments page
+setTimeout(() => {
+  const origShowPage2 = window.showPage;
+  if (origShowPage2) {
+    window.showPage = function(page, el, fromNav) {
+      origShowPage2.call(this, page, el, fromNav);
+      if (page === 'investments') {
+        renderAllocChart();
+        renderRealizedPnl();
+      }
+    };
+  }
+}, 50);
 
 // ═══════════════════════════
 // CLOSE ON OVERLAY CLICK
