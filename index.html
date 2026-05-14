@@ -243,6 +243,16 @@
   .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; }
   .chart-card h3 { font-size: .85rem; color: var(--text2); font-weight: 600; margin-bottom: 14px; text-transform: uppercase; letter-spacing: .06em; }
   .chart-wrap { position: relative; }
+
+  /* Category filter for charts page */
+  .cat-filter-bar { margin-bottom: 16px; }
+  .cat-filter-label { font-size: .7rem; color: var(--text3); text-transform: uppercase; letter-spacing: .08em; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
+  .cat-filter-label button { font-size: .68rem; color: var(--accent2); background: none; border: none; cursor: pointer; font-family: inherit; font-weight: 600; padding: 0; }
+  .cat-filter-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+  .cat-pill { display: inline-flex; align-items: center; gap: 4px; padding: 5px 11px; border-radius: 20px; font-size: .75rem; font-weight: 500; cursor: pointer; transition: .15s; border: 1.5px solid var(--border); background: var(--surface2); color: var(--text2); user-select: none; }
+  .cat-pill:hover { border-color: var(--border2); color: var(--text); }
+  .cat-pill.active { background: rgba(124,106,255,.18); border-color: var(--accent); color: var(--accent2); }
+  .cat-pill .cp-emoji { font-size: .85rem; line-height: 1; }
   
   .recurring-list { display: flex; flex-direction: column; gap: 8px; }
   .recurring-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; display: flex; align-items: center; gap: 12px; }
@@ -1099,6 +1109,14 @@
         </div>
       </div>
       <div class="inner-content" style="padding-top:16px">
+        <!-- Category filter -->
+        <div class="cat-filter-bar">
+          <div class="cat-filter-label">
+            <span>篩選類別</span>
+            <button onclick="resetCatFilter()">全選 / 清除</button>
+          </div>
+          <div class="cat-filter-pills" id="cat-filter-pills"></div>
+        </div>
         <div class="chart-card">
           <h3>支出分類</h3>
           <div class="chart-wrap" style="height:240px">
@@ -3444,6 +3462,70 @@ function applyRecurring() {
 // ═══════════════════════════
 let pieInst, barInst;
 
+// ─── Report Category Filter ───────────────────────────────────
+// null = 全部（未初始化時）; Set of selected cat names when initialized
+let _chartCatFilter = null; // null = show all
+
+function _getAllExpenseCats() {
+  // Dynamic: union of CATS.expense names + any used in transactions
+  const baseNames = CATS.expense.map(c => c.name);
+  const usedNames = [...new Set(transactions.filter(t=>t.type==='expense').map(t=>t.cat))];
+  // Merge: keep base order, append any extra cats found in transactions
+  const all = [...baseNames];
+  usedNames.forEach(n => { if (!all.includes(n)) all.push(n); });
+  return all;
+}
+
+function buildCatFilterPills() {
+  const container = document.getElementById('cat-filter-pills');
+  if (!container) return;
+  const allCats = _getAllExpenseCats();
+  // Init filter: all selected
+  if (_chartCatFilter === null) _chartCatFilter = new Set(allCats);
+  // Add any new cats that appeared
+  allCats.forEach(c => { if (!_chartCatFilter.has(c) && _chartCatFilter.size > 0) _chartCatFilter.add(c); });
+
+  container.innerHTML = allCats.map(name => {
+    const meta = CATS.expense.find(c => c.name === name);
+    const emoji = meta ? meta.emoji : '📦';
+    const active = _chartCatFilter.has(name) ? 'active' : '';
+    return `<div class="cat-pill ${active}" onclick="toggleCatFilter('${name}')" data-cat="${name}">
+      <span class="cp-emoji">${emoji}</span>${name}
+    </div>`;
+  }).join('');
+}
+
+function toggleCatFilter(name) {
+  if (!_chartCatFilter) _chartCatFilter = new Set(_getAllExpenseCats());
+  if (_chartCatFilter.has(name)) {
+    // Don't allow deselecting the last one
+    if (_chartCatFilter.size === 1) return;
+    _chartCatFilter.delete(name);
+  } else {
+    _chartCatFilter.add(name);
+  }
+  // Update pill states without full rebuild
+  document.querySelectorAll('#cat-filter-pills .cat-pill').forEach(el => {
+    el.classList.toggle('active', _chartCatFilter.has(el.dataset.cat));
+  });
+  renderCharts();
+}
+
+function resetCatFilter() {
+  const allCats = _getAllExpenseCats();
+  // If all selected → deselect all but keep 1 (not practical; actually toggle all-off/all-on)
+  const allSelected = allCats.every(c => _chartCatFilter && _chartCatFilter.has(c));
+  if (allSelected) {
+    // Deselect all — allow zero selection (show empty state)
+    _chartCatFilter = new Set();
+  } else {
+    _chartCatFilter = new Set(allCats);
+  }
+  buildCatFilterPills();
+  renderCharts();
+}
+// ─────────────────────────────────────────────────────────────
+
 function renderCharts() {
   // Read live CSS variables so charts adapt to any theme
   const css = prop => getComputedStyle(document.documentElement).getPropertyValue(prop).trim();
@@ -3460,7 +3542,10 @@ function renderCharts() {
     ? accentLine + '14'
     : accentLine.replace(')', ', .08)').replace('rgb', 'rgba');
 
-  const txs = getMonthTxs().filter(t=>t.type==='expense');
+  buildCatFilterPills();
+
+  const allMonthTxs = getMonthTxs();
+  const txs = allMonthTxs.filter(t => t.type === 'expense' && (_chartCatFilter === null || _chartCatFilter.size === 0 || _chartCatFilter.has(t.cat)));
   const catMap = {};
   txs.forEach(t => { catMap[t.cat] = (catMap[t.cat]||0) + t.amount; });
   const labels = Object.keys(catMap);
@@ -3499,7 +3584,7 @@ function renderCharts() {
     const ds = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const dayTxs = transactions.filter(t=>t.date===ds);
     const inc = dayTxs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
-    const exp = dayTxs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+    const exp = dayTxs.filter(t=>t.type==='expense' && (_chartCatFilter===null||_chartCatFilter.size===0||_chartCatFilter.has(t.cat))).reduce((s,t)=>s+t.amount,0);
     runBalance += inc - exp;
     dayLabels.push(d);
     dayIncome.push(inc);
