@@ -249,8 +249,12 @@
   .cat-filter-type-tabs { display: flex; gap: 6px; margin-bottom: 10px; }
   .cft-tab { background: var(--surface2); border: 1.5px solid var(--border); border-radius: 9px; padding: 6px 16px; font-size: .8rem; font-weight: 600; color: var(--text2); cursor: pointer; font-family: 'DM Sans', sans-serif; transition: .15s; }
   .cft-tab:hover { border-color: var(--border2); color: var(--text); }
-  .cft-tab.active { background: rgba(124,106,255,.18); border-color: var(--accent); color: var(--accent2); }
-  .cat-filter-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .pie-legend { display: flex; flex-direction: column; gap: 5px; margin-top: 14px; }
+  .pie-legend-item { display: flex; align-items: center; gap: 8px; font-size: .78rem; }
+  .pie-legend-dot { width: 9px; height: 9px; border-radius: 3px; flex-shrink: 0; }
+  .pie-legend-name { flex: 1; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pie-legend-amt { font-weight: 600; color: var(--text); white-space: nowrap; }
+  .pie-legend-pct { color: var(--text3); font-size: .72rem; white-space: nowrap; min-width: 36px; text-align: right; }
   .cat-filter-select { flex: 1; background: var(--surface2); border: 1.5px solid var(--border); border-radius: 9px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: .82rem; padding: 7px 10px; cursor: pointer; outline: none; transition: border-color .15s; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23606075' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; }
   .cat-filter-select:focus { border-color: var(--accent); }
   .cat-filter-select option { background: var(--surface2); color: var(--text); }
@@ -1132,15 +1136,17 @@
         </div>
         <div class="chart-card" id="chart-card-expense">
           <h3>支出分類</h3>
-          <div class="chart-wrap" style="height:240px">
+          <div class="chart-wrap" style="height:220px">
             <canvas id="pieChart"></canvas>
           </div>
+          <div class="pie-legend" id="pie-legend-expense"></div>
         </div>
         <div class="chart-card" id="chart-card-income" style="display:none">
           <h3>收入分類</h3>
-          <div class="chart-wrap" style="height:240px">
+          <div class="chart-wrap" style="height:220px">
             <canvas id="pieChartIncome"></canvas>
           </div>
+          <div class="pie-legend" id="pie-legend-income"></div>
         </div>
         <div class="chart-card">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
@@ -3595,6 +3601,25 @@ function renderCharts() {
   const allMonthTxs = getMonthTxs();
   const PIE_COLORS = ['#7c6aff','#34d399','#f87171','#fbbf24','#2dd4bf','#f472b6','#fb923c','#60a5fa','#a78bfa','#4ade80','#facc15','#f97316'];
 
+  // helper: render custom legend
+  function renderPieLegend(containerId, labels, data, colors) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    const total = data.reduce((a,b) => a+b, 0);
+    if (labels.length === 0) { el.innerHTML = ''; return; }
+    // Sort descending by amount
+    const items = labels.map((l,i) => ({ l, d: data[i], c: colors[i] })).sort((a,b) => b.d - a.d);
+    el.innerHTML = items.map(({ l, d, c }) => {
+      const pct = total > 0 ? (d / total * 100).toFixed(1) : '0.0';
+      return `<div class="pie-legend-item">
+        <div class="pie-legend-dot" style="background:${c}"></div>
+        <div class="pie-legend-name">${l}</div>
+        <div class="pie-legend-amt">$${d.toLocaleString()}</div>
+        <div class="pie-legend-pct">${pct}%</div>
+      </div>`;
+    }).join('');
+  }
+
   // ── 支出圓餅圖 ──
   const expFilter = _chartCatFilter;
   const expTxs = allMonthTxs.filter(t => t.type === 'expense' && (expFilter === null || expFilter.has(t.cat)));
@@ -3602,21 +3627,25 @@ function renderCharts() {
   expTxs.forEach(t => { expMap[t.cat] = (expMap[t.cat]||0) + t.amount; });
   const expLabels = Object.keys(expMap);
   const expData   = Object.values(expMap);
+  const expColors = expLabels.map((_,i) => PIE_COLORS[i % PIE_COLORS.length]);
 
   const pieCtx = document.getElementById('pieChart').getContext('2d');
   if (pieInst) pieInst.destroy();
   pieInst = new Chart(pieCtx, {
     type: 'doughnut',
-    data: { labels: expLabels, datasets:[{ data: expData, backgroundColor: PIE_COLORS, borderWidth:0, hoverOffset:4 }] },
+    data: { labels: expLabels, datasets:[{ data: expData, backgroundColor: expColors, borderWidth:0, hoverOffset:4 }] },
     options: {
       responsive:true, maintainAspectRatio:false,
       plugins: {
-        legend:{ position:'right', labels:{ color: legendColor, font:{size:11}, boxWidth:12 } },
-        tooltip:{ backgroundColor: tooltipBg, titleColor: tooltipTitle, bodyColor: tooltipBody, borderColor: tooltipBorder, borderWidth:1 }
+        legend:{ display: false },
+        tooltip:{ backgroundColor: tooltipBg, titleColor: tooltipTitle, bodyColor: tooltipBody, borderColor: tooltipBorder, borderWidth:1,
+          callbacks: { label: ctx => ` $${ctx.parsed.toLocaleString()}  (${(ctx.parsed/expData.reduce((a,b)=>a+b,0)*100).toFixed(1)}%)` }
+        }
       },
       cutout:'65%',
     }
   });
+  renderPieLegend('pie-legend-expense', expLabels, expData, expColors);
 
   // ── 收入圓餅圖 ──
   const incFilter = _chartIncFilter;
@@ -3625,21 +3654,25 @@ function renderCharts() {
   incTxs.forEach(t => { incMap[t.cat] = (incMap[t.cat]||0) + t.amount; });
   const incLabels = Object.keys(incMap);
   const incData   = Object.values(incMap);
+  const incColors = incLabels.map((_,i) => PIE_COLORS[i % PIE_COLORS.length]);
 
   const pieIncCtx = document.getElementById('pieChartIncome').getContext('2d');
   if (window._pieIncInst) window._pieIncInst.destroy();
   window._pieIncInst = new Chart(pieIncCtx, {
     type: 'doughnut',
-    data: { labels: incLabels, datasets:[{ data: incData, backgroundColor: PIE_COLORS, borderWidth:0, hoverOffset:4 }] },
+    data: { labels: incLabels, datasets:[{ data: incData, backgroundColor: incColors, borderWidth:0, hoverOffset:4 }] },
     options: {
       responsive:true, maintainAspectRatio:false,
       plugins: {
-        legend:{ position:'right', labels:{ color: legendColor, font:{size:11}, boxWidth:12 } },
-        tooltip:{ backgroundColor: tooltipBg, titleColor: tooltipTitle, bodyColor: tooltipBody, borderColor: tooltipBorder, borderWidth:1 }
+        legend:{ display: false },
+        tooltip:{ backgroundColor: tooltipBg, titleColor: tooltipTitle, bodyColor: tooltipBody, borderColor: tooltipBorder, borderWidth:1,
+          callbacks: { label: ctx => ` $${ctx.parsed.toLocaleString()}  (${(ctx.parsed/incData.reduce((a,b)=>a+b,0)*100).toFixed(1)}%)` }
+        }
       },
       cutout:'65%',
     }
   });
+  renderPieLegend('pie-legend-income', incLabels, incData, incColors);
 
   // ── 每日收支分析 ──
   const daysInMonth = new Date(currentYear, currentMonth+1, 0).getDate();
