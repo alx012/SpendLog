@@ -4804,6 +4804,53 @@ const ACH_DEFS = [
   { id:'rec_8',        cat:'週期帳',   icon:'⚙️', name:'週期帳大師',     desc:'設定 8 筆以上週期帳，徹底掌握固定支出', xp:250, check: s => s.recCount >= 8 },
   { id:'rec_inc',      cat:'週期帳',   icon:'📈', name:'定期收入',       desc:'設定至少一筆週期收入',                  xp:60,  check: s => s.recIncCount >= 1 },
   { id:'rec_mix',      cat:'週期帳',   icon:'⚖️', name:'收支週期並重',   desc:'同時擁有週期收入和週期支出各 2 筆以上', xp:120, check: s => s.recIncCount >= 2 && s.recExpCount >= 2 },
+
+  // ── 投資交易 ─────────────────────────────────────────────
+  { id:'invest_first',   cat:'投資交易', icon:'📈', name:'股市初心者',     desc:'新增第一筆股票買入記錄',                xp:50,  check: s => s.investCount >= 1 },
+  { id:'invest_5',       cat:'投資交易', icon:'📊', name:'投資組合起步',   desc:'累計買入 5 筆交易',                     xp:80,  check: s => s.investCount >= 5 },
+  { id:'invest_20',      cat:'投資交易', icon:'💹', name:'交易活躍者',     desc:'累計買入 20 筆交易',                    xp:150, check: s => s.investCount >= 20 },
+  { id:'invest_50',      cat:'投資交易', icon:'🏦', name:'交易達人',       desc:'累計買入 50 筆交易',                    xp:300, check: s => s.investCount >= 50 },
+  { id:'invest_sym3',    cat:'投資交易', icon:'🧩', name:'分散投資',       desc:'持有 3 種以上不同股票',                 xp:80,  check: s => s.investSymCount >= 3 },
+  { id:'invest_sym5',    cat:'投資交易', icon:'🌐', name:'投資組合多元',   desc:'持有 5 種以上不同股票',                 xp:150, check: s => s.investSymCount >= 5 },
+  { id:'invest_sym10',   cat:'投資交易', icon:'🗺️', name:'投資組合大師',   desc:'持有 10 種以上不同股票',                xp:300, check: s => s.investSymCount >= 10 },
+  { id:'sell_first',     cat:'投資交易', icon:'💰', name:'首次出場',       desc:'完成第一筆賣出記錄',                    xp:60,  check: s => s.sellCount >= 1 },
+  { id:'sell_10',        cat:'投資交易', icon:'🔄', name:'進出自如',       desc:'累計完成 10 筆賣出',                    xp:120, check: s => s.sellCount >= 10 },
+  { id:'sell_gain',      cat:'投資交易', icon:'🟢', name:'獲利出場',       desc:'至少一筆賣出獲利',                      xp:80,  check: s => s.sellGainCount >= 1 },
+  { id:'sell_gain5',     cat:'投資交易', icon:'🏅', name:'五次獲利',       desc:'累計 5 次獲利賣出',                     xp:200, check: s => s.sellGainCount >= 5 },
+  { id:'sell_loss',      cat:'投資交易', icon:'🎓', name:'虧損中學習',     desc:'承受過至少一次賣出虧損',                xp:30,  check: s => s.sellLossCount >= 1 },
+  { id:'sell_pnl_pos',   cat:'投資交易', icon:'✅', name:'總體獲利',       desc:'已實現損益累計大於 0',                  xp:150, check: s => s.totalRealizedPnl > 0 },
+  { id:'sell_pnl_10k',   cat:'投資交易', icon:'💎', name:'萬元獲利',       desc:'已實現損益累計超過 10,000',             xp:250, check: s => s.totalRealizedPnl >= 10000 },
+  { id:'sell_us',        cat:'投資交易', icon:'🇺🇸', name:'美股交易者',    desc:'完成第一筆美股賣出',                    xp:80,  check: s => s.hasUsSell },
+  { id:'sell_tw',        cat:'投資交易', icon:'🇹🇼', name:'台股交易者',    desc:'完成第一筆台股賣出',                    xp:80,  check: s => s.hasTwSell },
+  { id:'sell_both_mkt',  cat:'投資交易', icon:'🌏', name:'雙市場玩家',     desc:'同時完成台股與美股賣出',                xp:150, check: s => s.hasUsSell && s.hasTwSell },
+  { id:'sell_bigwin',    cat:'投資交易', icon:'🚀', name:'單筆大獲利',     desc:'單筆賣出獲利超過 50,000',               xp:300, check: s => s.maxSellPnl >= 50000 },
+
+  // ── 消費行為 ─────────────────────────────────────────────
+  { id:'food_10',        cat:'消費行為', icon:'🍜', name:'美食探索家',     desc:'記錄 10 筆以上餐飲支出',                xp:40,  check: s => s.foodTxCount >= 10 },
+  { id:'food_50',        cat:'消費行為', icon:'🍱', name:'老饕記帳師',     desc:'記錄 50 筆以上餐飲支出',                xp:120, check: s => s.foodTxCount >= 50 },
+  { id:'travel_first',   cat:'消費行為', icon:'✈️', name:'出遊記錄',       desc:'記錄第一筆旅遊支出',                    xp:50,  check: s => s.travelTxCount >= 1 },
+  { id:'travel_5',       cat:'消費行為', icon:'🌍', name:'旅遊達人',       desc:'記錄 5 筆以上旅遊支出',                 xp:100, check: s => s.travelTxCount >= 5 },
+  { id:'big_exp_10k',    cat:'消費行為', icon:'💳', name:'大額消費',       desc:'單筆支出超過 10,000',                   xp:60,  check: s => s.maxSingleExp >= 10000 },
+  { id:'big_exp_50k',    cat:'消費行為', icon:'🛒', name:'重大採購',       desc:'單筆支出超過 50,000',                   xp:120, check: s => s.maxSingleExp >= 50000 },
+  { id:'total_exp_100k', cat:'消費行為', icon:'📦', name:'十萬消費',       desc:'累計支出總額超過 100,000',               xp:100, check: s => s.totalExpense >= 100000 },
+  { id:'total_exp_500k', cat:'消費行為', icon:'🏪', name:'五十萬消費',     desc:'累計支出總額超過 500,000',               xp:250, check: s => s.totalExpense >= 500000 },
+  { id:'total_inc_100k', cat:'消費行為', icon:'🤑', name:'百萬收入人生',   desc:'累計收入總額超過 100,000',               xp:150, check: s => s.totalIncome >= 100000 },
+  { id:'total_inc_1m',   cat:'消費行為', icon:'💸', name:'百萬收入達成',   desc:'累計收入總額超過 1,000,000',             xp:500, check: s => s.totalIncome >= 1000000 },
+
+  // ── 時間與習慣 ───────────────────────────────────────────
+  { id:'streak_14',      cat:'時間習慣', icon:'🔥', name:'兩週連續記帳',   desc:'連續 14 天都有記帳記錄',                xp:200, check: s => s.dayStreak >= 14 },
+  { id:'streak_60',      cat:'時間習慣', icon:'🌕', name:'兩個月不間斷',   desc:'連續 60 天都有記帳記錄',                xp:600, check: s => s.dayStreak >= 60 },
+  { id:'streak_100',     cat:'時間習慣', icon:'💯', name:'百日習慣養成',   desc:'連續 100 天都有記帳記錄',               xp:1000,check: s => s.dayStreak >= 100 },
+  { id:'tx_month_6',     cat:'時間習慣', icon:'📆', name:'半年記帳人',     desc:'在 6 個不同月份都有記帳記錄',            xp:150, check: s => s.txMonthCount >= 6 },
+  { id:'tx_month_12',    cat:'時間習慣', icon:'🗓️', name:'全年記帳師',     desc:'在 12 個不同月份都有記帳記錄',           xp:400, check: s => s.txMonthCount >= 12 },
+  { id:'weekend_rec',    cat:'時間習慣', icon:'🌴', name:'週末也記帳',     desc:'累計在週末記錄 10 筆以上交易',           xp:80,  check: s => s.weekendTxCount >= 10 },
+  { id:'note_50',        cat:'時間習慣', icon:'📝', name:'備注超人',       desc:'累計為 50 筆交易加上備注',               xp:150, check: s => s.noteCount >= 50 },
+  { id:'note_long',      cat:'時間習慣', icon:'✍️', name:'詳細紀錄控',     desc:'寫過 10 筆 10 字以上的備注',            xp:100, check: s => s.longNoteCount >= 10 },
+
+  // ── 里程碑 ───────────────────────────────────────────────
+  { id:'acc_type3',      cat:'里程碑',   icon:'🧰', name:'帳戶多樣化',     desc:'擁有 3 種以上不同類型的帳戶',            xp:100, check: s => s.accTypeCount >= 3 },
+  { id:'goal_1m',        cat:'里程碑',   icon:'🏔️', name:'百萬夢想家',     desc:'設定一個目標金額超過 1,000,000 的目標',  xp:150, check: s => s.goal1mTarget },
+  { id:'save_12month',   cat:'里程碑',   icon:'🌈', name:'年度正收益',     desc:'連續 12 個月收入大於支出',               xp:1000,check: s => s.posMonths >= 12 },
 ];
 
 let achData = DB.get('achData') || { claimedIds: [], totalXp: 0 };
@@ -4821,7 +4868,7 @@ function computeAchStats() {
   const maxIncome = Math.max(0, ...transactions.filter(t => t.type === 'income').map(t => t.amount));
 
   // unique expense categories
-  const expCats = new Set(transactions.filter(t => t.type === 'expense').map(t => t.category));
+  const expCats = new Set(transactions.filter(t => t.type === 'expense').map(t => t.cat));
   const catCount = expCats.size;
 
   // current month transactions
@@ -4868,7 +4915,7 @@ function computeAchStats() {
   let lowImpulseMonth = false;
   if (monthExpense > 0) {
     const impulseKeywords = ['娛樂','購物','遊戲','電影','衣服','服飾','美容','旅遊'];
-    const impulseTx = curMonthTx.filter(t => t.type==='expense' && impulseKeywords.some(k => (t.category||'').includes(k)));
+    const impulseTx = curMonthTx.filter(t => t.type==='expense' && impulseKeywords.some(k => (t.cat||'').includes(k)));
     const impulseTotal = impulseTx.reduce((s,t)=>s+t.amount,0);
     if ((impulseTotal / monthExpense) < 0.2) lowImpulseMonth = true;
   }
@@ -4883,7 +4930,7 @@ function computeAchStats() {
   let budgetKept = false, allBudgetsKept = false;
   if (budgets.length > 0) {
     const keptList = budgets.map(b => {
-      const spent = curMonthTx.filter(t=>t.type==='expense'&&t.category===b.category).reduce((s,t)=>s+t.amount,0);
+      const spent = curMonthTx.filter(t=>t.type==='expense'&&t.cat===b.cat).reduce((s,t)=>s+t.amount,0);
       return spent <= b.amount;
     });
     budgetKept = keptList.some(Boolean);
@@ -4898,7 +4945,7 @@ function computeAchStats() {
       const y = d.getFullYear(), m = d.getMonth();
       const mTx = transactions.filter(t=>{ const td=new Date(t.date); return td.getFullYear()===y&&td.getMonth()===m; });
       const allKept = budgets.every(b => {
-        const spent = mTx.filter(t=>t.type==='expense'&&t.category===b.category).reduce((s,t)=>s+t.amount,0);
+        const spent = mTx.filter(t=>t.type==='expense'&&t.cat===b.cat).reduce((s,t)=>s+t.amount,0);
         return spent <= b.amount;
       });
       if (allKept) budgetKeptMonths++; else break;
@@ -4917,12 +4964,56 @@ function computeAchStats() {
   const recIncCount = recurring.filter(r => r.type === 'income').length;
   const recExpCount = recurring.filter(r => r.type === 'expense').length;
 
+  // investments & sell records
+  const investCount = investments.length;
+  const investSymCount = new Set(investments.map(i => i.symbol)).size;
+  const sellCount = sellRecords.length;
+  const sellGainCount = sellRecords.filter(r => (r.pnl || 0) > 0).length;
+  const sellLossCount = sellRecords.filter(r => (r.pnl || 0) < 0).length;
+  const totalRealizedPnl = sellRecords.reduce((s, r) => s + (r.pnl || 0), 0);
+  const hasUsSell = sellRecords.some(r => r.market === 'US');
+  const hasTwSell = sellRecords.some(r => r.market === 'TW');
+  const maxSellPnl = Math.max(0, ...sellRecords.map(r => r.pnl || 0));
+
+  // weekend / time habits
+  const weekendTxCount = transactions.filter(t => { const d = new Date(t.date); return d.getDay() === 0 || d.getDay() === 6; }).length;
+  const morningTxCount = transactions.filter(t => { const h = new Date(t.created_at || t.date).getHours(); return h >= 6 && h < 12; }).length;
+
+  // spending behaviour
+  const maxSingleExp = Math.max(0, ...transactions.filter(t => t.type === 'expense').map(t => t.amount));
+  const totalExpense = transactions.filter(t => t.type === 'expense').reduce((s,t) => s + t.amount, 0);
+  const totalIncome  = transactions.filter(t => t.type === 'income').reduce((s,t) => s + t.amount, 0);
+  const foodTxCount = transactions.filter(t => t.type === 'expense' && (t.cat||t.category||'').includes('餐')).length;
+  const travelTxCount = transactions.filter(t => t.type === 'expense' && (t.cat||t.category||'').includes('旅')).length;
+
+  // notes quality
+  const longNoteCount = transactions.filter(t => t.note && t.note.trim().length >= 10).length;
+
+  // transaction date diversity
+  const txMonthCount = new Set(transactions.map(t => (t.date||'').slice(0,7))).size;
+
+  // big expense
+  const maxSingleExpAllTime = maxSingleExp;
+
+  // goal milestone
+  const goal1mTarget = goals.some(g => g.target >= 1000000);
+
+  // account type diversity
+  const accTypes = new Set(accounts.map(a => a.type));
+  const accTypeCount = accTypes.size;
+
   return { txCount, incomeCount, transferCount, hasNote, noteCount, maxIncome, catCount,
            monthBalance, posMonths, dayStreak, expDropMonth, lowImpulseMonth,
            accCount, allAccPositive, totalNetWorth,
            budgetCount, budgetKept, allBudgetsKept, budgetKeptMonths,
            goalCount, goalHalf, goal90pct, goalDone, hasBigGoal,
-           recCount, recIncCount, recExpCount };
+           recCount, recIncCount, recExpCount,
+           investCount, investSymCount, sellCount, sellGainCount, sellLossCount,
+           totalRealizedPnl, hasUsSell, hasTwSell, maxSellPnl,
+           weekendTxCount, morningTxCount,
+           maxSingleExp: maxSingleExpAllTime, totalExpense, totalIncome,
+           foodTxCount, travelTxCount, longNoteCount, txMonthCount,
+           goal1mTarget, accTypeCount };
 }
 
 function getLevelInfo(xp) {
