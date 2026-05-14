@@ -246,13 +246,16 @@
 
   /* Category filter for charts page */
   .cat-filter-bar { margin-bottom: 16px; }
-  .cat-filter-label { font-size: .7rem; color: var(--text3); text-transform: uppercase; letter-spacing: .08em; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
-  .cat-filter-label button { font-size: .68rem; color: var(--accent2); background: none; border: none; cursor: pointer; font-family: inherit; font-weight: 600; padding: 0; }
-  .cat-filter-pills { display: flex; flex-wrap: wrap; gap: 6px; }
-  .cat-pill { display: inline-flex; align-items: center; gap: 4px; padding: 5px 11px; border-radius: 20px; font-size: .75rem; font-weight: 500; cursor: pointer; transition: .15s; border: 1.5px solid var(--border); background: var(--surface2); color: var(--text2); user-select: none; }
-  .cat-pill:hover { border-color: var(--border2); color: var(--text); }
-  .cat-pill.active { background: rgba(124,106,255,.18); border-color: var(--accent); color: var(--accent2); }
-  .cat-pill .cp-emoji { font-size: .85rem; line-height: 1; }
+  .cat-filter-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .cat-filter-select { flex: 1; background: var(--surface2); border: 1.5px solid var(--border); border-radius: 9px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: .82rem; padding: 7px 10px; cursor: pointer; outline: none; transition: border-color .15s; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23606075' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; }
+  .cat-filter-select:focus { border-color: var(--accent); }
+  .cat-filter-select option { background: var(--surface2); color: var(--text); }
+  .cat-filter-clear-btn { background: none; border: 1.5px solid var(--border); border-radius: 9px; color: var(--text3); font-family: 'DM Sans', sans-serif; font-size: .75rem; font-weight: 600; padding: 7px 12px; cursor: pointer; white-space: nowrap; transition: .15s; }
+  .cat-filter-clear-btn:hover { border-color: var(--border2); color: var(--text2); }
+  .cat-filter-tags { display: flex; flex-wrap: wrap; gap: 6px; min-height: 0; }
+  .cat-tag { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px 4px 10px; border-radius: 20px; font-size: .75rem; font-weight: 500; background: rgba(124,106,255,.18); border: 1.5px solid var(--accent); color: var(--accent2); user-select: none; }
+  .cat-tag .ct-remove { cursor: pointer; font-size: .85rem; line-height: 1; color: var(--accent2); opacity: .7; margin-left: 2px; transition: opacity .15s; }
+  .cat-tag .ct-remove:hover { opacity: 1; }
   
   .recurring-list { display: flex; flex-direction: column; gap: 8px; }
   .recurring-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; display: flex; align-items: center; gap: 12px; }
@@ -1111,11 +1114,13 @@
       <div class="inner-content" style="padding-top:16px">
         <!-- Category filter -->
         <div class="cat-filter-bar">
-          <div class="cat-filter-label">
-            <span>篩選類別</span>
-            <button onclick="resetCatFilter()">全選 / 清除</button>
+          <div class="cat-filter-row">
+            <select id="cat-filter-select" class="cat-filter-select" onchange="addCatFilter(this.value); this.value=''">
+              <option value="">＋ 新增篩選類別…</option>
+            </select>
+            <button class="cat-filter-clear-btn" onclick="clearAllCatFilter()" title="清除全部篩選">全部顯示</button>
           </div>
-          <div class="cat-filter-pills" id="cat-filter-pills"></div>
+          <div class="cat-filter-tags" id="cat-filter-tags"></div>
         </div>
         <div class="chart-card">
           <h3>支出分類</h3>
@@ -3463,65 +3468,72 @@ function applyRecurring() {
 let pieInst, barInst;
 
 // ─── Report Category Filter ───────────────────────────────────
-// null = 全部（未初始化時）; Set of selected cat names when initialized
-let _chartCatFilter = null; // null = show all
+// null = 全部（無篩選）; Set = 只顯示選中的類別
+let _chartCatFilter = null; // null means "show all"
 
 function _getAllExpenseCats() {
-  // Dynamic: union of CATS.expense names + any used in transactions
   const baseNames = CATS.expense.map(c => c.name);
-  const usedNames = [...new Set(transactions.filter(t=>t.type==='expense').map(t=>t.cat))];
-  // Merge: keep base order, append any extra cats found in transactions
+  const usedNames = [...new Set(transactions.filter(t => t.type === 'expense').map(t => t.cat))];
   const all = [...baseNames];
   usedNames.forEach(n => { if (!all.includes(n)) all.push(n); });
   return all;
 }
 
-function buildCatFilterPills() {
-  const container = document.getElementById('cat-filter-pills');
-  if (!container) return;
-  const allCats = _getAllExpenseCats();
-  // Init filter: all selected
-  if (_chartCatFilter === null) _chartCatFilter = new Set(allCats);
-  // Add any new cats that appeared
-  allCats.forEach(c => { if (!_chartCatFilter.has(c) && _chartCatFilter.size > 0) _chartCatFilter.add(c); });
-
-  container.innerHTML = allCats.map(name => {
-    const meta = CATS.expense.find(c => c.name === name);
-    const emoji = meta ? meta.emoji : '📦';
-    const active = _chartCatFilter.has(name) ? 'active' : '';
-    return `<div class="cat-pill ${active}" onclick="toggleCatFilter('${name}')" data-cat="${name}">
-      <span class="cp-emoji">${emoji}</span>${name}
-    </div>`;
-  }).join('');
+function _getCatEmoji(name) {
+  const meta = CATS.expense.find(c => c.name === name);
+  return meta ? meta.emoji : '📦';
 }
 
-function toggleCatFilter(name) {
-  if (!_chartCatFilter) _chartCatFilter = new Set(_getAllExpenseCats());
-  if (_chartCatFilter.has(name)) {
-    // Don't allow deselecting the last one
-    if (_chartCatFilter.size === 1) return;
-    _chartCatFilter.delete(name);
-  } else {
-    _chartCatFilter.add(name);
+function buildCatFilterUI() {
+  _buildCatFilterDropdown();
+  _buildCatFilterTags();
+}
+
+function _buildCatFilterDropdown() {
+  const sel = document.getElementById('cat-filter-select');
+  if (!sel) return;
+  const allCats = _getAllExpenseCats();
+  const selected = _chartCatFilter;
+  // Options = cats not yet in the filter (or all if no filter active)
+  const available = selected ? allCats.filter(c => !selected.has(c)) : allCats;
+  sel.innerHTML = `<option value="">＋ 新增篩選類別…</option>` +
+    available.map(name => `<option value="${name}">${_getCatEmoji(name)} ${name}</option>`).join('');
+}
+
+function _buildCatFilterTags() {
+  const container = document.getElementById('cat-filter-tags');
+  if (!container) return;
+  if (!_chartCatFilter || _chartCatFilter.size === 0) {
+    container.innerHTML = '';
+    return;
   }
-  // Update pill states without full rebuild
-  document.querySelectorAll('#cat-filter-pills .cat-pill').forEach(el => {
-    el.classList.toggle('active', _chartCatFilter.has(el.dataset.cat));
-  });
+  container.innerHTML = [..._chartCatFilter].map(name =>
+    `<div class="cat-tag">
+      <span>${_getCatEmoji(name)} ${name}</span>
+      <span class="ct-remove" onclick="removeCatFilter('${name}')" title="移除">✕</span>
+    </div>`
+  ).join('');
+}
+
+function addCatFilter(name) {
+  if (!name) return;
+  if (!_chartCatFilter) _chartCatFilter = new Set();
+  _chartCatFilter.add(name);
+  buildCatFilterUI();
   renderCharts();
 }
 
-function resetCatFilter() {
-  const allCats = _getAllExpenseCats();
-  // If all selected → deselect all but keep 1 (not practical; actually toggle all-off/all-on)
-  const allSelected = allCats.every(c => _chartCatFilter && _chartCatFilter.has(c));
-  if (allSelected) {
-    // Deselect all — allow zero selection (show empty state)
-    _chartCatFilter = new Set();
-  } else {
-    _chartCatFilter = new Set(allCats);
-  }
-  buildCatFilterPills();
+function removeCatFilter(name) {
+  if (!_chartCatFilter) return;
+  _chartCatFilter.delete(name);
+  if (_chartCatFilter.size === 0) _chartCatFilter = null;
+  buildCatFilterUI();
+  renderCharts();
+}
+
+function clearAllCatFilter() {
+  _chartCatFilter = null;
+  buildCatFilterUI();
   renderCharts();
 }
 // ─────────────────────────────────────────────────────────────
@@ -3542,7 +3554,7 @@ function renderCharts() {
     ? accentLine + '14'
     : accentLine.replace(')', ', .08)').replace('rgb', 'rgba');
 
-  buildCatFilterPills();
+  buildCatFilterUI();
 
   const allMonthTxs = getMonthTxs();
   const txs = allMonthTxs.filter(t => t.type === 'expense' && (_chartCatFilter === null || _chartCatFilter.size === 0 || _chartCatFilter.has(t.cat)));
