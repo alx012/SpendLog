@@ -246,6 +246,10 @@
 
   /* Category filter for charts page */
   .cat-filter-bar { margin-bottom: 16px; }
+  .cat-filter-type-tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+  .cft-tab { background: var(--surface2); border: 1.5px solid var(--border); border-radius: 9px; padding: 6px 16px; font-size: .8rem; font-weight: 600; color: var(--text2); cursor: pointer; font-family: 'DM Sans', sans-serif; transition: .15s; }
+  .cft-tab:hover { border-color: var(--border2); color: var(--text); }
+  .cft-tab.active { background: rgba(124,106,255,.18); border-color: var(--accent); color: var(--accent2); }
   .cat-filter-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
   .cat-filter-select { flex: 1; background: var(--surface2); border: 1.5px solid var(--border); border-radius: 9px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: .82rem; padding: 7px 10px; cursor: pointer; outline: none; transition: border-color .15s; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23606075' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; }
   .cat-filter-select:focus { border-color: var(--accent); }
@@ -1114,18 +1118,28 @@
       <div class="inner-content" style="padding-top:16px">
         <!-- Category filter -->
         <div class="cat-filter-bar">
+          <div class="cat-filter-type-tabs">
+            <button class="cft-tab active" id="cft-tab-expense" onclick="setCatFilterType('expense',this)">💸 支出</button>
+            <button class="cft-tab" id="cft-tab-income" onclick="setCatFilterType('income',this)">💰 收入</button>
+          </div>
           <div class="cat-filter-row">
             <select id="cat-filter-select" class="cat-filter-select" onchange="addCatFilter(this.value); this.value=''">
               <option value="">＋ 新增篩選類別…</option>
             </select>
-            <button class="cat-filter-clear-btn" onclick="clearAllCatFilter()" title="清除全部篩選">全部顯示</button>
+            <button class="cat-filter-clear-btn" onclick="clearAllCatFilter()">全部顯示</button>
           </div>
           <div class="cat-filter-tags" id="cat-filter-tags"></div>
         </div>
-        <div class="chart-card">
+        <div class="chart-card" id="chart-card-expense">
           <h3>支出分類</h3>
           <div class="chart-wrap" style="height:240px">
             <canvas id="pieChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card" id="chart-card-income" style="display:none">
+          <h3>收入分類</h3>
+          <div class="chart-wrap" style="height:240px">
+            <canvas id="pieChartIncome"></canvas>
           </div>
         </div>
         <div class="chart-card">
@@ -3468,20 +3482,41 @@ function applyRecurring() {
 let pieInst, barInst;
 
 // ─── Report Category Filter ───────────────────────────────────
-// null = 全部（無篩選）; Set = 只顯示選中的類別
-let _chartCatFilter = null; // null means "show all"
+let _catFilterType = 'expense'; // 'expense' | 'income'
+let _chartCatFilter = null;       // null = 全部; Set = 選中的類別（依目前 type）
+let _chartIncFilter = null;       // 收入篩選
 
-function _getAllExpenseCats() {
-  const baseNames = CATS.expense.map(c => c.name);
-  const usedNames = [...new Set(transactions.filter(t => t.type === 'expense').map(t => t.cat))];
+function _getActiveCatFilter() {
+  return _catFilterType === 'income' ? _chartIncFilter : _chartCatFilter;
+}
+function _setActiveCatFilter(val) {
+  if (_catFilterType === 'income') _chartIncFilter = val;
+  else _chartCatFilter = val;
+}
+
+function _getAllCats(type) {
+  const baseNames = (CATS[type] || []).map(c => c.name);
+  const usedNames = [...new Set(transactions.filter(t => t.type === type).map(t => t.cat))];
   const all = [...baseNames];
   usedNames.forEach(n => { if (!all.includes(n)) all.push(n); });
   return all;
 }
 
-function _getCatEmoji(name) {
-  const meta = CATS.expense.find(c => c.name === name);
-  return meta ? meta.emoji : '📦';
+function _getCatEmoji(name, type) {
+  const list = type === 'income' ? CATS.income : CATS.expense;
+  const meta = list.find(c => c.name === name);
+  return meta ? meta.emoji : (type === 'income' ? '💰' : '📦');
+}
+
+function setCatFilterType(type, btn) {
+  _catFilterType = type;
+  document.querySelectorAll('.cft-tab').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  // Show/hide pie charts
+  document.getElementById('chart-card-expense').style.display = type === 'expense' ? '' : 'none';
+  document.getElementById('chart-card-income').style.display  = type === 'income'  ? '' : 'none';
+  buildCatFilterUI();
+  renderCharts();
 }
 
 function buildCatFilterUI() {
@@ -3492,24 +3527,21 @@ function buildCatFilterUI() {
 function _buildCatFilterDropdown() {
   const sel = document.getElementById('cat-filter-select');
   if (!sel) return;
-  const allCats = _getAllExpenseCats();
-  const selected = _chartCatFilter;
-  // Options = cats not yet in the filter (or all if no filter active)
+  const allCats = _getAllCats(_catFilterType);
+  const selected = _getActiveCatFilter();
   const available = selected ? allCats.filter(c => !selected.has(c)) : allCats;
   sel.innerHTML = `<option value="">＋ 新增篩選類別…</option>` +
-    available.map(name => `<option value="${name}">${_getCatEmoji(name)} ${name}</option>`).join('');
+    available.map(name => `<option value="${name}">${_getCatEmoji(name, _catFilterType)} ${name}</option>`).join('');
 }
 
 function _buildCatFilterTags() {
   const container = document.getElementById('cat-filter-tags');
   if (!container) return;
-  if (!_chartCatFilter || _chartCatFilter.size === 0) {
-    container.innerHTML = '';
-    return;
-  }
-  container.innerHTML = [..._chartCatFilter].map(name =>
+  const selected = _getActiveCatFilter();
+  if (!selected || selected.size === 0) { container.innerHTML = ''; return; }
+  container.innerHTML = [...selected].map(name =>
     `<div class="cat-tag">
-      <span>${_getCatEmoji(name)} ${name}</span>
+      <span>${_getCatEmoji(name, _catFilterType)} ${name}</span>
       <span class="ct-remove" onclick="removeCatFilter('${name}')" title="移除">✕</span>
     </div>`
   ).join('');
@@ -3517,22 +3549,26 @@ function _buildCatFilterTags() {
 
 function addCatFilter(name) {
   if (!name) return;
-  if (!_chartCatFilter) _chartCatFilter = new Set();
-  _chartCatFilter.add(name);
+  const cur = _getActiveCatFilter();
+  const next = cur ? new Set(cur) : new Set();
+  next.add(name);
+  _setActiveCatFilter(next);
   buildCatFilterUI();
   renderCharts();
 }
 
 function removeCatFilter(name) {
-  if (!_chartCatFilter) return;
-  _chartCatFilter.delete(name);
-  if (_chartCatFilter.size === 0) _chartCatFilter = null;
+  const cur = _getActiveCatFilter();
+  if (!cur) return;
+  const next = new Set(cur);
+  next.delete(name);
+  _setActiveCatFilter(next.size === 0 ? null : next);
   buildCatFilterUI();
   renderCharts();
 }
 
 function clearAllCatFilter() {
-  _chartCatFilter = null;
+  _setActiveCatFilter(null);
   buildCatFilterUI();
   renderCharts();
 }
@@ -3557,32 +3593,49 @@ function renderCharts() {
   buildCatFilterUI();
 
   const allMonthTxs = getMonthTxs();
-  const txs = allMonthTxs.filter(t => t.type === 'expense' && (_chartCatFilter === null || _chartCatFilter.size === 0 || _chartCatFilter.has(t.cat)));
-  const catMap = {};
-  txs.forEach(t => { catMap[t.cat] = (catMap[t.cat]||0) + t.amount; });
-  const labels = Object.keys(catMap);
-  const data   = Object.values(catMap);
-  const colors = ['#7c6aff','#34d399','#f87171','#fbbf24','#2dd4bf','#f472b6','#fb923c','#60a5fa','#a78bfa','#4ade80','#facc15','#f97316'];
+  const PIE_COLORS = ['#7c6aff','#34d399','#f87171','#fbbf24','#2dd4bf','#f472b6','#fb923c','#60a5fa','#a78bfa','#4ade80','#facc15','#f97316'];
+
+  // ── 支出圓餅圖 ──
+  const expFilter = _chartCatFilter;
+  const expTxs = allMonthTxs.filter(t => t.type === 'expense' && (expFilter === null || expFilter.has(t.cat)));
+  const expMap = {};
+  expTxs.forEach(t => { expMap[t.cat] = (expMap[t.cat]||0) + t.amount; });
+  const expLabels = Object.keys(expMap);
+  const expData   = Object.values(expMap);
 
   const pieCtx = document.getElementById('pieChart').getContext('2d');
   if (pieInst) pieInst.destroy();
   pieInst = new Chart(pieCtx, {
     type: 'doughnut',
-    data: { labels, datasets:[{ data, backgroundColor:colors, borderWidth:0, hoverOffset:4 }] },
+    data: { labels: expLabels, datasets:[{ data: expData, backgroundColor: PIE_COLORS, borderWidth:0, hoverOffset:4 }] },
     options: {
       responsive:true, maintainAspectRatio:false,
       plugins: {
-        legend:{
-          position:'right',
-          labels:{ color: legendColor, font:{size:11}, boxWidth:12 }
-        },
-        tooltip: {
-          backgroundColor: tooltipBg,
-          titleColor: tooltipTitle,
-          bodyColor:  tooltipBody,
-          borderColor: tooltipBorder,
-          borderWidth: 1,
-        }
+        legend:{ position:'right', labels:{ color: legendColor, font:{size:11}, boxWidth:12 } },
+        tooltip:{ backgroundColor: tooltipBg, titleColor: tooltipTitle, bodyColor: tooltipBody, borderColor: tooltipBorder, borderWidth:1 }
+      },
+      cutout:'65%',
+    }
+  });
+
+  // ── 收入圓餅圖 ──
+  const incFilter = _chartIncFilter;
+  const incTxs = allMonthTxs.filter(t => t.type === 'income' && (incFilter === null || incFilter.has(t.cat)));
+  const incMap = {};
+  incTxs.forEach(t => { incMap[t.cat] = (incMap[t.cat]||0) + t.amount; });
+  const incLabels = Object.keys(incMap);
+  const incData   = Object.values(incMap);
+
+  const pieIncCtx = document.getElementById('pieChartIncome').getContext('2d');
+  if (window._pieIncInst) window._pieIncInst.destroy();
+  window._pieIncInst = new Chart(pieIncCtx, {
+    type: 'doughnut',
+    data: { labels: incLabels, datasets:[{ data: incData, backgroundColor: PIE_COLORS, borderWidth:0, hoverOffset:4 }] },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins: {
+        legend:{ position:'right', labels:{ color: legendColor, font:{size:11}, boxWidth:12 } },
+        tooltip:{ backgroundColor: tooltipBg, titleColor: tooltipTitle, bodyColor: tooltipBody, borderColor: tooltipBorder, borderWidth:1 }
       },
       cutout:'65%',
     }
@@ -3595,8 +3648,8 @@ function renderCharts() {
   for (let d=1; d<=daysInMonth; d++) {
     const ds = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const dayTxs = transactions.filter(t=>t.date===ds);
-    const inc = dayTxs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
-    const exp = dayTxs.filter(t=>t.type==='expense' && (_chartCatFilter===null||_chartCatFilter.size===0||_chartCatFilter.has(t.cat))).reduce((s,t)=>s+t.amount,0);
+    const inc = dayTxs.filter(t=>t.type==='income' && (_chartIncFilter===null||_chartIncFilter.has(t.cat))).reduce((s,t)=>s+t.amount,0);
+    const exp = dayTxs.filter(t=>t.type==='expense' && (_chartCatFilter===null||_chartCatFilter.has(t.cat))).reduce((s,t)=>s+t.amount,0);
     runBalance += inc - exp;
     dayLabels.push(d);
     dayIncome.push(inc);
