@@ -3205,14 +3205,44 @@ function confirmDeposit() {
   const g = goals.find(g=>g.id===depositGoalId);
   if (!g) return;
 
-  const delta = depositType === 'in' ? amount : -amount;
+  const isIn  = depositType === 'in';
+  const delta = isIn ? amount : -amount;
+
+  // ── 1. 更新目標已存金額 ──────────────────────────────
   g.saved = Math.max(0, (g.saved || 0) + delta);
+
+  // ── 2. 對應帳戶餘額增減 ──────────────────────────────
+  if (g.accountId) {
+    const acc = accounts.find(a => a.id === g.accountId);
+    if (acc) {
+      // 存入目標 → 帳戶扣錢；提領目標 → 帳戶加錢
+      acc.balance = (acc.balance || 0) + (isIn ? -amount : amount);
+    }
+  }
+
+  // ── 3. 自動新增轉帳交易紀錄 ─────────────────────────
+  const today = localDateStr(new Date());
+  const tx = {
+    id:        uid(),
+    type:      'transfer',
+    amount,
+    date:      today,
+    cat:       '存錢目標',
+    payment:   '',
+    note:      `${isIn ? '存入' : '提領'} 目標：${g.name}`,
+    accountId: null,
+    fromId:    isIn  ? (g.accountId || null) : null,
+    toId:      !isIn ? (g.accountId || null) : null,
+  };
+  transactions.unshift(tx);
 
   save();
   closeModal('goalDepositModal');
   renderGoals();
+  renderAccounts();
+  renderAll();
   if (g.saved >= g.target) showToast('🎉 恭喜！目標達成！');
-  else showToast(depositType==='in' ? `✅ 已存入 $${fmt(amount)}` : `✅ 已提領 $${fmt(amount)}`);
+  else showToast(isIn ? `✅ 已存入 $${fmt(amount)}` : `✅ 已提領 $${fmt(amount)}`);
 }
 
 function renderGoals() {
