@@ -1766,7 +1766,19 @@ async function pushToSupabase() {
       day:       r.day,
       accountid: r.accountId || null,
     })),{onConflict:'id'}));
-    ops.push(_sb.from('goals').upsert(goals.map(r=>({...r,user_id:uid_col})),{onConflict:'id'}));
+    ops.push(_sb.from('goals').upsert(goals.map(r=>({
+      id:         r.id,
+      user_id:    uid_col,
+      name:       r.name,
+      emoji:      r.emoji   || null,
+      target:     r.target,
+      saved:      r.saved   || 0,
+      deadline:   r.deadline|| null,
+      accountid:  r.accountId || null,
+      note:       r.note    || null,
+      color:      r.color   || null,
+      created_at: r.createdAt || null,
+    })),{onConflict:'id'}));
     // meta row — include rec_applied so recurring dedup state survives refresh
     ops.push(_sb.from('user_data').upsert({
       user_id:     uid_col,
@@ -1824,7 +1836,18 @@ async function pullFromSupabase() {
   if (accR.data)  accounts     = accR.data.map(strip);
   if (budR.data)  budgets      = budR.data.map(strip);
   if (recR.data)  recurring    = recR.data.map(stripRec);
-  if (goalR.data) goals        = goalR.data.map(strip);
+  if (goalR.data) goals = goalR.data.map(r=>({
+    id:        r.id,
+    name:      r.name,
+    emoji:     r.emoji    || null,
+    target:    r.target,
+    saved:     r.saved    || 0,
+    deadline:  r.deadline || null,
+    accountId: r.accountid|| null,
+    note:      r.note     || null,
+    color:     r.color    || null,
+    createdAt: r.created_at || null,
+  }));
   if (metaR.data) {
     const m = metaR.data;
     if (m.settings)    try { settings = JSON.parse(m.settings); } catch {}
