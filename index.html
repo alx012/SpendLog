@@ -728,6 +728,12 @@
   .invest-price-chip .ipc-label { font-size: .6rem; color: var(--text3); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px; }
   .invest-price-chip .ipc-val { font-size: .82rem; font-weight: 600; color: var(--text); }
   /* ── 已實現損益 ── */
+  .realized-month-nav { display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 10px; }
+  .rmn-arrow { background: var(--surface2); border: 1px solid var(--border); color: var(--text2); width: 28px; height: 28px; border-radius: 7px; cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; transition: .15s; }
+  .rmn-arrow:hover { border-color: var(--border2); color: var(--text); }
+  .rmn-label { font-size: .85rem; font-weight: 600; color: var(--text2); min-width: 90px; text-align: center; cursor: pointer; border-radius: 6px; padding: 4px 8px; transition: .15s; user-select: none; }
+  .rmn-label:hover { background: var(--surface2); color: var(--text); }
+  .rmn-label.filtered { color: var(--accent2); }
   .realized-section { margin-top: 20px; }
   .realized-tabs { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
   .realized-tab { background: var(--surface2); border: 1.5px solid var(--border); border-radius: 8px; padding: 6px 14px; font-size: .78rem; font-weight: 600; color: var(--text2); cursor: pointer; transition: .15s; font-family: 'DM Sans'; }
@@ -1398,6 +1404,12 @@
                 <div class="rs-label">虧損次數</div>
                 <div class="rs-val" id="realized-loss-count" style="color:var(--red)">0</div>
               </div>
+            </div>
+            <!-- Month filter nav -->
+            <div class="realized-month-nav" id="realized-month-nav">
+              <button class="rmn-arrow" onclick="shiftRealizedMonth(-1)" title="上個月">&#8249;</button>
+              <span class="rmn-label" id="realized-month-label" onclick="resetRealizedMonth()" title="點擊回到全部">全部</span>
+              <button class="rmn-arrow" onclick="shiftRealizedMonth(1)" title="下個月">&#8250;</button>
             </div>
             <div class="realized-tabs">
               <button class="realized-tab active" id="rtab-all" onclick="setRealizedTab('all',this)">全部</button>
@@ -5350,6 +5362,71 @@ setTimeout(() => {
 let sellRecords = DB.get('sells') || [];
 let _sellEditId = null;
 let _sellMarket = 'TW';
+// ─── Realized Month Filter ───────────────────────────────────
+// null = 全部; otherwise { year, month } (1-indexed)
+let _realizedMonth = null;
+
+function _getRealizedMonths() {
+  // Return sorted unique YYYY-MM strings from sellRecords
+  const set = new Set(sellRecords.map(r => (r.sell_date || '').slice(0, 7)).filter(s => s.length === 7));
+  return Array.from(set).sort();
+}
+
+function _updateRealizedMonthLabel() {
+  const el = document.getElementById('realized-month-label');
+  if (!el) return;
+  if (!_realizedMonth) {
+    el.textContent = '全部';
+    el.classList.remove('filtered');
+    el.title = '點擊回到全部';
+  } else {
+    const y = _realizedMonth.year;
+    const m = String(_realizedMonth.month).padStart(2, '0');
+    el.textContent = `${y} / ${m}`;
+    el.classList.add('filtered');
+    el.title = '點擊顯示全部月份';
+  }
+}
+
+function shiftRealizedMonth(dir) {
+  const months = _getRealizedMonths();
+  if (months.length === 0) return;
+
+  if (!_realizedMonth) {
+    // Enter month mode: go to last month (dir=1 stays at last, dir=-1 goes to second-last)
+    const idx = dir >= 0 ? months.length - 1 : months.length - 1;
+    const parts = months[Math.max(0, idx)].split('-');
+    _realizedMonth = { year: parseInt(parts[0]), month: parseInt(parts[1]) };
+  } else {
+    const cur = `${_realizedMonth.year}-${String(_realizedMonth.month).padStart(2, '0')}`;
+    let idx = months.indexOf(cur);
+    if (idx === -1) {
+      // Current month not in list, find nearest
+      idx = months.length - 1;
+    } else {
+      idx += dir;
+    }
+    if (idx < 0 || idx >= months.length) {
+      // Out of bounds → go back to "全部"
+      _realizedMonth = null;
+    } else {
+      const parts = months[idx].split('-');
+      _realizedMonth = { year: parseInt(parts[0]), month: parseInt(parts[1]) };
+    }
+  }
+  _updateRealizedMonthLabel();
+  renderRealizedPnl();
+}
+
+function resetRealizedMonth() {
+  if (_realizedMonth) {
+    _realizedMonth = null;
+    _updateRealizedMonthLabel();
+    renderRealizedPnl();
+  }
+}
+// ─────────────────────────────────────────────────────────────
+
 let _realizedTab = 'all';
 
 function saveSellsLocal() {
@@ -5669,10 +5746,26 @@ function renderRealizedPnl() {
   const list = document.getElementById('realized-list');
   if (!list) return;
 
+  _updateRealizedMonthLabel();
+
   const fxRate = usdTwdRate || null;
-  // Totals
+
+  // Determine month-filtered base records
+  let monthFiltered = sellRecords;
+  if (_realizedMonth) {
+    const yy = _realizedMonth.year;
+    const mm = String(_realizedMonth.month).padStart(2, '0');
+    const prefix = `${yy}-${mm}`;
+    monthFiltered = sellRecords.filter(r => (r.sell_date || '').startsWith(prefix));
+  }
+
+  // Show/hide month nav based on whether there are any records at all
+  const navEl = document.getElementById('realized-month-nav');
+  if (navEl) navEl.style.display = sellRecords.length === 0 ? 'none' : 'flex';
+
+  // Totals (based on month-filtered records)
   let totalPnlTWD = 0, winCount = 0, lossCount = 0;
-  sellRecords.forEach(r => {
+  monthFiltered.forEach(r => {
     const actualShares = r.unit === 'lot' ? r.shares * 1000 : r.shares;
     const pnl = (r.sell_price - r.buy_price) * actualShares;
     const pnlTWD = (r.market === 'US' && fxRate) ? pnl * fxRate : pnl;
@@ -5682,7 +5775,7 @@ function renderRealizedPnl() {
 
   const totalEl = document.getElementById('realized-total-pnl');
   if (totalEl) {
-    if (sellRecords.length === 0) {
+    if (monthFiltered.length === 0) {
       totalEl.textContent = '—'; totalEl.style.color = 'var(--text3)';
     } else {
       const sign = totalPnlTWD >= 0 ? '+' : '';
@@ -5695,13 +5788,16 @@ function renderRealizedPnl() {
   if (winEl) winEl.textContent = winCount;
   if (lossEl) lossEl.textContent = lossCount;
 
-  // Filter
-  let filtered = sellRecords.slice().sort((a,b) => (a.sell_date||'') < (b.sell_date||'') ? 1 : -1);
+  // Tab + month filter applied together
+  let filtered = monthFiltered.slice().sort((a,b) => (a.sell_date||'') < (b.sell_date||'') ? 1 : -1);
   if (_realizedTab === 'gain') filtered = filtered.filter(r => r.pnl >= 0);
   if (_realizedTab === 'loss') filtered = filtered.filter(r => r.pnl < 0);
 
   if (filtered.length === 0) {
-    list.innerHTML = `<div class="empty" style="padding:28px 0"><div class="icon" style="font-size:1.4rem">💹</div><p style="font-size:.82rem;color:var(--text3)">${_realizedTab !== 'all' ? '此篩選條件無記錄' : '尚未記錄賣出交易<br>點擊「+ 新增賣出」開始記錄'}</p></div>`;
+    const noDataMsg = sellRecords.length === 0
+      ? '尚未記錄賣出交易<br>點擊「+ 新增賣出」開始記錄'
+      : (_realizedMonth ? '本月無記錄' : '此篩選條件無記錄');
+    list.innerHTML = `<div class="empty" style="padding:28px 0"><div class="icon" style="font-size:1.4rem">💹</div><p style="font-size:.82rem;color:var(--text3)">${noDataMsg}</p></div>`;
     return;
   }
 
