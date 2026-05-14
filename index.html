@@ -761,6 +761,10 @@
     <!-- 註冊表單 -->
     <div id="auth-register-form" style="display:none">
       <div class="form-group">
+        <label class="form-label">姓名 / 暱稱</label>
+        <input class="form-input" type="text" id="reg-name" placeholder="請輸入您的名字" autocomplete="name">
+      </div>
+      <div class="form-group">
         <label class="form-label">電子信箱</label>
         <input class="form-input" type="email" id="reg-email" placeholder="your@email.com" autocomplete="email">
       </div>
@@ -1703,7 +1707,7 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="eye-icon-profile-password"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
         </button>
       </div>
-      <div style="font-size:.72rem;color:var(--text3);margin-top:5px">密碼僅儲存於本機，不會上傳至任何伺服器</div>
+      <div style="font-size:.72rem;color:var(--text3);margin-top:5px">留空則不修改；修改後需重新登入</div>
     </div>
     <div style="display:flex;gap:10px;margin-top:4px">
       <button class="btn-secondary" onclick="closeModal('profileModal')">取消</button>
@@ -1970,20 +1974,30 @@ async function handleLogin() {
 
 // ── Register ──────────────────────────────────────────
 async function handleRegister() {
+  const name  = document.getElementById('reg-name').value.trim();
   const email = document.getElementById('reg-email').value.trim();
   const pwd   = document.getElementById('reg-password').value;
   const pwd2  = document.getElementById('reg-password2').value;
-  if (!email || !pwd) { showAuthMsg('error','請填寫所有欄位'); return; }
+  if (!name)           { showAuthMsg('error','請填寫姓名 / 暱稱'); return; }
+  if (!email || !pwd)  { showAuthMsg('error','請填寫所有欄位'); return; }
   if (pwd.length < 6)  { showAuthMsg('error','密碼至少需要 6 個字元'); return; }
   if (pwd !== pwd2)    { showAuthMsg('error','兩次密碼輸入不一致'); return; }
   setAuthBtnLoading('auth-register-btn', true, '建立帳號');
   clearAuthMsg();
-  const { data, error } = await _sb.auth.signUp({ email, password: pwd });
+  // 把姓名存在 Supabase Auth user_metadata
+  const { data, error } = await _sb.auth.signUp({
+    email,
+    password: pwd,
+    options: { data: { display_name: name } }
+  });
   setAuthBtnLoading('auth-register-btn', false, '建立帳號');
   if (error) { showAuthMsg('error', error.message); return; }
+  // 同步寫入本地 profile
+  profile.name = name;
+  saveProfileData();
   if (data.session) {
     currentUser = data.user;
-    await onLoginSuccess(true); // new account, merge local data
+    await onLoginSuccess(true);
   } else {
     showAuthMsg('success','✅ 註冊成功！請到信箱點驗證連結，再回來登入。');
     switchAuthTab('login');
@@ -2006,6 +2020,11 @@ async function onLoginSuccess(isNewAccount) {
     await mergeLocalToSupabase(); // upload local → cloud
   } else {
     await pullFromSupabase();     // pull cloud → local
+  }
+  // 若 profile 沒有名字，嘗試從 Supabase user_metadata 帶入
+  if (!profile.name && currentUser?.user_metadata?.display_name) {
+    profile.name = currentUser.user_metadata.display_name;
+    saveProfileData();
   }
   hideAuthOverlay();
   updateAccountSection();
@@ -3970,30 +3989,47 @@ function updateDashboardGreeting() {
 }
 
 function openProfileModal() {
-  document.getElementById('profile-name').value     = profile.name     || '';
+  document.getElementById('profile-name').value     = profile.name || (currentUser?.user_metadata?.display_name) || '';
   document.getElementById('profile-birthday').value = profile.birthday || '';
-  document.getElementById('profile-email').value    = profile.email    || '';
+  // 帶入 Supabase Auth 的實際登入信箱
+  document.getElementById('profile-email').value    = currentUser?.email || profile.email || '';
   document.getElementById('profile-password').value = '';
   document.getElementById('profileModal').classList.add('open');
 }
 
-function saveProfile() {
+async function saveProfile() {
   const name     = document.getElementById('profile-name').value.trim();
   const birthday = document.getElementById('profile-birthday').value;
   const email    = document.getElementById('profile-email').value.trim();
   const password = document.getElementById('profile-password').value;
 
+  // 更新本地 profile（姓名、生日）
   profile.name     = name;
   profile.birthday = birthday;
   profile.email    = email;
-  if (password) profile.password = password;
+
+  // 若有登入，同步更新 Supabase Auth
+  if (currentUser) {
+    const updates = { data: { display_name: name } };
+    // 信箱有變更才更新
+    if (email && email !== currentUser.email) updates.email = email;
+    // 密碼有填才更新
+    if (password && password.length >= 6) updates.password = password;
+
+    const { error } = await _sb.auth.updateUser(updates);
+    if (error) {
+      showToast('⚠️ 帳號更新失敗：' + error.message);
+      return;
+    }
+    if (updates.email) showToast('✅ 已儲存，信箱變更需點驗證信確認');
+  }
 
   saveProfileData();
   closeModal('profileModal');
   renderProfileCard();
   updateDashboardGreeting();
   renderAchievements();
-  showToast('✅ 個人資料已儲存');
+  if (!updates?.email) showToast('✅ 個人資料已儲存');
 }
 
 function togglePwdVisibility(inputId, btn) {
