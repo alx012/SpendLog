@@ -1311,13 +1311,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
         </div>
         <h2>投資組合</h2>
-        <div style="display:flex;align-items:center;gap:8px">
-          <button class="btn-secondary" id="invest-refresh-btn" onclick="refreshInvestPrices()" style="padding:8px 12px;font-size:.8rem;display:flex;align-items:center;gap:6px">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-            刷新報價
-          </button>
-          <button class="btn-secondary" onclick="openInvestModal()" style="padding:8px 12px;font-size:.8rem">+ 新增買入</button>
-        </div>
+        <button class="btn-secondary" id="invest-refresh-btn" onclick="refreshInvestPrices()" style="padding:8px 12px;font-size:.8rem;display:flex;align-items:center;gap:6px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          刷新報價
+        </button>
       </div>
       <div class="inner-content">
         <!-- Summary -->
@@ -1365,38 +1362,51 @@
         <div id="invest-alloc-empty" style="font-size:.8rem;color:var(--text3);padding:8px 0 16px">取得報價後顯示資產配置圖</div>
 
         <!-- Holdings list (grouped by symbol) -->
-        <div class="section-title">持股明細</div>
-        <div class="invest-list" id="invest-list">
-          <div class="empty"><div class="icon">📈</div><p>尚未新增任何持股<br>點擊「+ 新增買入」開始記錄</p></div>
+        <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none" onclick="toggleInvestSection('holdings')">
+            <span>持股明細</span>
+            <svg id="holdings-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="transition:transform .25s;color:var(--text3)"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <button class="btn-secondary" onclick="openInvestModal()" style="padding:5px 12px;font-size:.75rem">+ 新增買入</button>
+        </div>
+        <div id="holdings-body">
+          <div class="invest-list" id="invest-list">
+            <div class="empty"><div class="icon">📈</div><p>尚未新增任何持股<br>點擊「+ 新增買入」開始記錄</p></div>
+          </div>
         </div>
 
         <!-- Realized P&L Section -->
         <div class="realized-section">
           <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-            <span>已實現損益</span>
+            <div style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none" onclick="toggleInvestSection('realized')">
+              <span>已實現損益</span>
+              <svg id="realized-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="transition:transform .25s;color:var(--text3)"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
             <button class="btn-secondary" onclick="openSellModal()" style="padding:5px 12px;font-size:.75rem">+ 新增賣出</button>
           </div>
-          <div class="realized-summary">
-            <div class="realized-sum-card">
-              <div class="rs-label">已實現總損益</div>
-              <div class="rs-val" id="realized-total-pnl" style="color:var(--text3)">—</div>
+          <div id="realized-body">
+            <div class="realized-summary">
+              <div class="realized-sum-card">
+                <div class="rs-label">已實現總損益</div>
+                <div class="rs-val" id="realized-total-pnl" style="color:var(--text3)">—</div>
+              </div>
+              <div class="realized-sum-card">
+                <div class="rs-label">獲利次數</div>
+                <div class="rs-val" id="realized-win-count" style="color:var(--green)">0</div>
+              </div>
+              <div class="realized-sum-card">
+                <div class="rs-label">虧損次數</div>
+                <div class="rs-val" id="realized-loss-count" style="color:var(--red)">0</div>
+              </div>
             </div>
-            <div class="realized-sum-card">
-              <div class="rs-label">獲利次數</div>
-              <div class="rs-val" id="realized-win-count" style="color:var(--green)">0</div>
+            <div class="realized-tabs">
+              <button class="realized-tab active" id="rtab-all" onclick="setRealizedTab('all',this)">全部</button>
+              <button class="realized-tab" id="rtab-gain" onclick="setRealizedTab('gain',this)">獲利</button>
+              <button class="realized-tab" id="rtab-loss" onclick="setRealizedTab('loss',this)">虧損</button>
             </div>
-            <div class="realized-sum-card">
-              <div class="rs-label">虧損次數</div>
-              <div class="rs-val" id="realized-loss-count" style="color:var(--red)">0</div>
+            <div class="tx-list" id="realized-list" style="gap:4px">
+              <div class="empty" style="padding:28px 0"><div class="icon" style="font-size:1.4rem">💹</div><p style="font-size:.82rem;color:var(--text3)">尚未記錄賣出交易<br>點擊「+ 新增賣出」開始記錄</p></div>
             </div>
-          </div>
-          <div class="realized-tabs">
-            <button class="realized-tab active" id="rtab-all" onclick="setRealizedTab('all',this)">全部</button>
-            <button class="realized-tab" id="rtab-gain" onclick="setRealizedTab('gain',this)">獲利</button>
-            <button class="realized-tab" id="rtab-loss" onclick="setRealizedTab('loss',this)">虧損</button>
-          </div>
-          <div class="tx-list" id="realized-list" style="gap:4px">
-            <div class="empty" style="padding:28px 0"><div class="icon" style="font-size:1.4rem">💹</div><p style="font-size:.82rem;color:var(--text3)">尚未記錄賣出交易<br>點擊「+ 新增賣出」開始記錄</p></div>
           </div>
         </div>
       </div>
@@ -4868,6 +4878,28 @@ let usdTwdRate = null;       // 記憶體快取，不寫 DB
 let usdTwdTs = 0;
 let _investEditId = null;
 let _investMarket = 'TW';
+
+// ── Section collapse helpers ──────────────────────────
+const _investSectionState = { holdings: true, realized: true };
+
+function toggleInvestSection(section) {
+  _investSectionState[section] = !_investSectionState[section];
+  const body = document.getElementById(section === 'holdings' ? 'holdings-body' : 'realized-body');
+  const chevron = document.getElementById(section + '-chevron');
+  const open = _investSectionState[section];
+  if (body) {
+    body.style.overflow = 'hidden';
+    if (open) {
+      body.style.maxHeight = body.scrollHeight + 'px';
+      setTimeout(() => { body.style.maxHeight = ''; body.style.overflow = ''; }, 300);
+    } else {
+      body.style.maxHeight = body.scrollHeight + 'px';
+      requestAnimationFrame(() => { body.style.maxHeight = '0'; });
+    }
+    body.style.transition = 'max-height .3s ease';
+  }
+  if (chevron) chevron.style.transform = open ? '' : 'rotate(-90deg)';
+}
 
 // ── Supabase ──────────────────────────────────────────
 async function pullInvestments() {
