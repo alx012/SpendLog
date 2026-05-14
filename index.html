@@ -731,9 +731,7 @@
   .realized-month-nav { display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 10px; }
   .rmn-arrow { background: var(--surface2); border: 1px solid var(--border); color: var(--text2); width: 28px; height: 28px; border-radius: 7px; cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; transition: .15s; }
   .rmn-arrow:hover { border-color: var(--border2); color: var(--text); }
-  .rmn-label { font-size: .85rem; font-weight: 600; color: var(--text2); min-width: 90px; text-align: center; cursor: pointer; border-radius: 6px; padding: 4px 8px; transition: .15s; user-select: none; }
-  .rmn-label:hover { background: var(--surface2); color: var(--text); }
-  .rmn-label.filtered { color: var(--accent2); }
+  .rmn-label { font-size: .88rem; font-weight: 600; color: var(--accent2); min-width: 90px; text-align: center; border-radius: 6px; padding: 4px 8px; user-select: none; }
   .realized-section { margin-top: 20px; }
   .realized-tabs { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
   .realized-tab { background: var(--surface2); border: 1.5px solid var(--border); border-radius: 8px; padding: 6px 14px; font-size: .78rem; font-weight: 600; color: var(--text2); cursor: pointer; transition: .15s; font-family: 'DM Sans'; }
@@ -1408,7 +1406,7 @@
             <!-- Month filter nav -->
             <div class="realized-month-nav" id="realized-month-nav">
               <button class="rmn-arrow" onclick="shiftRealizedMonth(-1)" title="上個月">&#8249;</button>
-              <span class="rmn-label" id="realized-month-label" onclick="resetRealizedMonth()" title="點擊回到全部">全部</span>
+              <span class="rmn-label" id="realized-month-label"></span>
               <button class="rmn-arrow" onclick="shiftRealizedMonth(1)" title="下個月">&#8250;</button>
             </div>
             <div class="realized-tabs">
@@ -5363,67 +5361,25 @@ let sellRecords = DB.get('sells') || [];
 let _sellEditId = null;
 let _sellMarket = 'TW';
 // ─── Realized Month Filter ───────────────────────────────────
-// null = 全部; otherwise { year, month } (1-indexed)
-let _realizedMonth = null;
-
-function _getRealizedMonths() {
-  // Return sorted unique YYYY-MM strings from sellRecords
-  const set = new Set(sellRecords.map(r => (r.sell_date || '').slice(0, 7)).filter(s => s.length === 7));
-  return Array.from(set).sort();
-}
+// Always in month mode; initialized to current month
+const _now = new Date();
+let _realizedMonth = { year: _now.getFullYear(), month: _now.getMonth() + 1 };
 
 function _updateRealizedMonthLabel() {
   const el = document.getElementById('realized-month-label');
   if (!el) return;
-  if (!_realizedMonth) {
-    el.textContent = '全部';
-    el.classList.remove('filtered');
-    el.title = '點擊回到全部';
-  } else {
-    const y = _realizedMonth.year;
-    const m = String(_realizedMonth.month).padStart(2, '0');
-    el.textContent = `${y} / ${m}`;
-    el.classList.add('filtered');
-    el.title = '點擊顯示全部月份';
-  }
+  const m = String(_realizedMonth.month).padStart(2, '0');
+  el.textContent = `${_realizedMonth.year} / ${m}`;
 }
 
 function shiftRealizedMonth(dir) {
-  const months = _getRealizedMonths();
-  if (months.length === 0) return;
-
-  if (!_realizedMonth) {
-    // Enter month mode: go to last month (dir=1 stays at last, dir=-1 goes to second-last)
-    const idx = dir >= 0 ? months.length - 1 : months.length - 1;
-    const parts = months[Math.max(0, idx)].split('-');
-    _realizedMonth = { year: parseInt(parts[0]), month: parseInt(parts[1]) };
-  } else {
-    const cur = `${_realizedMonth.year}-${String(_realizedMonth.month).padStart(2, '0')}`;
-    let idx = months.indexOf(cur);
-    if (idx === -1) {
-      // Current month not in list, find nearest
-      idx = months.length - 1;
-    } else {
-      idx += dir;
-    }
-    if (idx < 0 || idx >= months.length) {
-      // Out of bounds → go back to "全部"
-      _realizedMonth = null;
-    } else {
-      const parts = months[idx].split('-');
-      _realizedMonth = { year: parseInt(parts[0]), month: parseInt(parts[1]) };
-    }
-  }
+  let { year, month } = _realizedMonth;
+  month += dir;
+  if (month > 12) { month = 1; year++; }
+  if (month < 1)  { month = 12; year--; }
+  _realizedMonth = { year, month };
   _updateRealizedMonthLabel();
   renderRealizedPnl();
-}
-
-function resetRealizedMonth() {
-  if (_realizedMonth) {
-    _realizedMonth = null;
-    _updateRealizedMonthLabel();
-    renderRealizedPnl();
-  }
 }
 // ─────────────────────────────────────────────────────────────
 
@@ -5750,20 +5706,17 @@ function renderRealizedPnl() {
 
   const fxRate = usdTwdRate || null;
 
-  // Determine month-filtered base records
-  let monthFiltered = sellRecords;
-  if (_realizedMonth) {
-    const yy = _realizedMonth.year;
-    const mm = String(_realizedMonth.month).padStart(2, '0');
-    const prefix = `${yy}-${mm}`;
-    monthFiltered = sellRecords.filter(r => (r.sell_date || '').startsWith(prefix));
-  }
+  // Always filter by selected month
+  const yy = _realizedMonth.year;
+  const mm = String(_realizedMonth.month).padStart(2, '0');
+  const prefix = `${yy}-${mm}`;
+  const monthFiltered = sellRecords.filter(r => (r.sell_date || '').startsWith(prefix));
 
-  // Show/hide month nav based on whether there are any records at all
+  // Month nav always visible
   const navEl = document.getElementById('realized-month-nav');
-  if (navEl) navEl.style.display = sellRecords.length === 0 ? 'none' : 'flex';
+  if (navEl) navEl.style.display = 'flex';
 
-  // Totals (based on month-filtered records)
+  // Totals based on month-filtered records
   let totalPnlTWD = 0, winCount = 0, lossCount = 0;
   monthFiltered.forEach(r => {
     const actualShares = r.unit === 'lot' ? r.shares * 1000 : r.shares;
@@ -5788,16 +5741,13 @@ function renderRealizedPnl() {
   if (winEl) winEl.textContent = winCount;
   if (lossEl) lossEl.textContent = lossCount;
 
-  // Tab + month filter applied together
+  // Tab filter on top of month filter
   let filtered = monthFiltered.slice().sort((a,b) => (a.sell_date||'') < (b.sell_date||'') ? 1 : -1);
   if (_realizedTab === 'gain') filtered = filtered.filter(r => r.pnl >= 0);
   if (_realizedTab === 'loss') filtered = filtered.filter(r => r.pnl < 0);
 
   if (filtered.length === 0) {
-    const noDataMsg = sellRecords.length === 0
-      ? '尚未記錄賣出交易<br>點擊「+ 新增賣出」開始記錄'
-      : (_realizedMonth ? '本月無記錄' : '此篩選條件無記錄');
-    list.innerHTML = `<div class="empty" style="padding:28px 0"><div class="icon" style="font-size:1.4rem">💹</div><p style="font-size:.82rem;color:var(--text3)">${noDataMsg}</p></div>`;
+    list.innerHTML = `<div class="empty" style="padding:28px 0"><div class="icon" style="font-size:1.4rem">💹</div><p style="font-size:.82rem;color:var(--text3)">${_realizedTab !== 'all' ? '此篩選條件無記錄' : '本月無賣出記錄'}</p></div>`;
     return;
   }
 
