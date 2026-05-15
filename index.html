@@ -1862,6 +1862,43 @@
   </div>
 </div>
 
+<!-- 預算明細 Modal -->
+<div class="modal-overlay" id="budgetDetailModal">
+  <div class="modal" style="max-height:88vh;display:flex;flex-direction:column">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-shrink:0">
+      <div class="modal-title" style="margin:0" id="budget-detail-title">預算明細</div>
+      <button onclick="closeBudgetDetail()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text2);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center">✕</button>
+    </div>
+    <!-- 統計三格 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;flex-shrink:0">
+      <div style="background:var(--surface2);border-radius:10px;padding:10px;text-align:center">
+        <div style="font-size:.72rem;color:var(--text2);margin-bottom:2px">已使用</div>
+        <div id="budget-detail-spent" style="font-weight:700;color:var(--red);font-size:.95rem"></div>
+      </div>
+      <div style="background:var(--surface2);border-radius:10px;padding:10px;text-align:center">
+        <div style="font-size:.72rem;color:var(--text2);margin-bottom:2px">預算上限</div>
+        <div id="budget-detail-limit" style="font-weight:700;color:var(--text);font-size:.95rem"></div>
+      </div>
+      <div style="background:var(--surface2);border-radius:10px;padding:10px;text-align:center">
+        <div style="font-size:.72rem;color:var(--text2);margin-bottom:2px">剩餘</div>
+        <div id="budget-detail-remain" style="font-weight:700;font-size:.95rem"></div>
+      </div>
+    </div>
+    <!-- 進度條 -->
+    <div style="margin-bottom:6px;flex-shrink:0">
+      <div style="height:8px;background:var(--surface3);border-radius:4px;overflow:hidden">
+        <div id="budget-detail-bar-fill" style="height:100%;border-radius:4px;transition:width .4s"></div>
+      </div>
+      <div id="budget-detail-pct" style="font-size:.75rem;font-weight:600;margin-top:6px;text-align:right"></div>
+    </div>
+    <!-- 明細列表 -->
+    <div id="budget-detail-list" style="overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:8px"></div>
+    <!-- 刪除按鈕 -->
+    <button onclick="deleteBudget(budgetDetailId)" style="margin-top:14px;width:100%;padding:12px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:var(--red);border-radius:10px;cursor:pointer;font-size:.9rem;font-weight:600;flex-shrink:0">🗑️ 刪除此預算</button>
+  </div>
+</div>
+
 <!-- Recurring Modal -->
 <div class="modal-overlay" id="recurringModal">
   <div class="modal">
@@ -3385,18 +3422,70 @@ function renderBudget() {
     const pct   = Math.min((spent/b.limit)*100, 100);
     const color = pct>=90 ? 'var(--red)' : pct>=80 ? 'var(--yellow)' : 'var(--green)';
     const cat   = findCat(b.cat);
-    return `<div class="budget-card">
+    return `<div class="budget-card" onclick="openBudgetDetail('${b.id}')" style="cursor:pointer">
       <div class="budget-head">
         <div class="budget-name">${cat?.emoji||'📦'} ${b.cat}</div>
         <div style="display:flex;align-items:center;gap:8px">
           <div class="budget-amounts">${fmt(spent)} / ${fmt(b.limit)}</div>
-          <button class="btn-delete" onclick="deleteBudget('${b.id}')" title="刪除預算">🗑️</button>
+          <span style="color:var(--text3);font-size:.85rem">›</span>
         </div>
       </div>
       <div class="budget-bar"><div class="budget-fill" style="width:${pct}%;background:${color}"></div></div>
       <div class="budget-pct">${pct.toFixed(0)}% 已使用</div>
     </div>`;
   }).join('');
+}
+
+// ── 預算明細 ──────────────────────────────────────────
+let budgetDetailId = null;
+
+function openBudgetDetail(id) {
+  const b = budgets.find(b => b.id === id);
+  if (!b) return;
+  budgetDetailId = id;
+
+  const cat = findCat(b.cat);
+  const txs = getMonthTxs().filter(t => t.type === 'expense' && t.cat === b.cat);
+  const spent = txs.reduce((s, t) => s + t.amount, 0);
+  const pct   = Math.min((spent / b.limit) * 100, 100);
+  const color = pct >= 90 ? 'var(--red)' : pct >= 80 ? 'var(--yellow)' : 'var(--green)';
+  const remain = Math.max(0, b.limit - spent);
+
+  document.getElementById('budget-detail-title').textContent = `${cat?.emoji||'📦'} ${b.cat}`;
+
+  // 統計區塊
+  document.getElementById('budget-detail-spent').textContent = '$' + fmt(spent);
+  document.getElementById('budget-detail-limit').textContent = '$' + fmt(b.limit);
+  document.getElementById('budget-detail-remain').textContent = '$' + fmt(remain);
+  document.getElementById('budget-detail-remain').style.color = remain === 0 ? 'var(--red)' : 'var(--green)';
+
+  // 進度條
+  document.getElementById('budget-detail-bar-fill').style.width = pct + '%';
+  document.getElementById('budget-detail-bar-fill').style.background = color;
+  document.getElementById('budget-detail-pct').textContent = pct.toFixed(0) + '% 已使用';
+  document.getElementById('budget-detail-pct').style.color = color;
+
+  // 明細列表
+  const listEl = document.getElementById('budget-detail-list');
+  if (!txs.length) {
+    listEl.innerHTML = '<div style="text-align:center;color:var(--text3);padding:24px 0;font-size:.85rem">本月尚無此類別支出</div>';
+  } else {
+    listEl.innerHTML = txs.sort((a,b) => b.date.localeCompare(a.date)).map(t => `
+      <div style="background:var(--surface2);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px">
+        <div style="font-size:1.3rem;width:34px;text-align:center">💸</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;font-size:.9rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.note || t.cat}</div>
+          <div style="font-size:.75rem;color:var(--text2);margin-top:2px">${t.date}${t.payment ? ' · ' + t.payment : ''}</div>
+        </div>
+        <div style="font-weight:700;color:var(--red);font-size:.95rem;white-space:nowrap">-$${fmt(t.amount)}</div>
+      </div>`).join('');
+  }
+
+  document.getElementById('budgetDetailModal').classList.add('open');
+}
+
+function closeBudgetDetail() {
+  closeModal('budgetDetailModal');
 }
 
 function openBudgetModal() {
@@ -3422,6 +3511,7 @@ function deleteBudget(id) {
   if (!confirm('確定要刪除此預算嗎？')) return;
   budgets = budgets.filter(b => b.id !== id);
   save();
+  closeModal('budgetDetailModal');
   renderBudget();
   showToast('🗑️ 預算已刪除');
 }
